@@ -20,10 +20,11 @@ const TABS: { key: TabKey; label: string; emoji: string }[] = [
 
 export function LearnApp() {
   const [tab, setTab] = useState<TabKey>("abc");
+  const stars = useStars();
 
   return (
     <div className="min-h-screen px-4 pb-16 pt-6 sm:px-8">
-      <header className="mx-auto mb-8 flex max-w-6xl items-center justify-between">
+      <header className="mx-auto mb-8 flex max-w-6xl items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="grid h-12 w-12 place-items-center rounded-2xl bg-pink text-2xl shadow-md">🌈</div>
           <div>
@@ -31,9 +32,14 @@ export function LearnApp() {
             <p className="text-xs text-muted-foreground sm:text-sm">Tap, listen, learn — together.</p>
           </div>
         </div>
-        <div className="hidden rounded-full bg-card px-4 py-2 text-sm shadow-sm sm:block">
-          Made with 💛 for little learners
-        </div>
+        <button
+          onClick={() => setTab("rewards")}
+          className="card-soft flex items-center gap-2 rounded-full bg-butter px-4 py-2 text-sm font-bold shadow-sm transition hover:scale-105"
+          title="Your rewards"
+        >
+          <span className="text-xl">⭐</span>
+          <span>{stars}</span>
+        </button>
       </header>
 
       <nav className="mx-auto mb-8 max-w-6xl">
@@ -64,11 +70,46 @@ export function LearnApp() {
         {tab === "colors" && <ColorGrid />}
         {tab === "shapes" && <ShapeGrid />}
         {tab === "animals" && <AnimalGrid />}
+        {tab === "story" && <StoryTime />}
         {tab === "trace" && <TracePanel />}
         {tab === "match" && <MatchGame />}
         {tab === "quiz" && <QuizGame />}
+        {tab === "rewards" && <RewardsPanel stars={stars} />}
       </main>
     </div>
+  );
+}
+
+function RewardsPanel({ stars }: { stars: number }) {
+  const stickers = earnedStickers(stars);
+  return (
+    <Section title="Your Rewards 🏆" subtitle="Earn stars by playing games and reading stories!">
+      <div className="card-soft mx-auto max-w-2xl p-8 text-center">
+        <div className="mb-6 inline-flex items-center gap-3 rounded-full bg-butter px-6 py-3 text-2xl font-bold">
+          ⭐ {stars} stars
+        </div>
+        <h3 className="mb-4 font-display text-2xl font-bold">Sticker Book</h3>
+        <div className="grid grid-cols-3 gap-4 sm:grid-cols-6">
+          {[5, 15, 30, 50, 75, 100].map((at) => {
+            const got = stars >= at;
+            const emojis = ["🌟", "🦄", "🌈", "👑", "🚀", "🏆"];
+            const idx = [5, 15, 30, 50, 75, 100].indexOf(at);
+            return (
+              <div
+                key={at}
+                className={`aspect-square rounded-2xl p-3 transition ${got ? "bg-mint shadow-md scale-105" : "bg-muted opacity-40 grayscale"}`}
+              >
+                <div className="text-4xl">{emojis[idx]}</div>
+                <div className="mt-1 text-xs font-bold">{at}⭐</div>
+              </div>
+            );
+          })}
+        </div>
+        <p className="mt-6 text-sm text-muted-foreground">
+          {stickers.length} of 6 stickers collected
+        </p>
+      </div>
+    </Section>
   );
 }
 
