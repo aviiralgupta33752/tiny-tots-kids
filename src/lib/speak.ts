@@ -1,130 +1,114 @@
-import { tts } from "./tts.functions";
+// Browser-native speech: instant, no quota, works offline.
+// Runs synchronously inside click handlers so browsers don't block it.
 
-const cache = new Map<string, string>();
-const inflight = new Map<string, Promise<string | null>>();
-let current: HTMLAudioElement | null = null;
-let skipRemoteTts = false;
+let current: SpeechSynthesisUtterance | null = null;
+let voicesReady = false;
+let preferredVoice: SpeechSynthesisVoice | null = null;
+
+function pickVoice() {
+  if (typeof window === "undefined") return null;
+  const synth = window.speechSynthesis;
+  if (!synth) return null;
+  const voices = synth.getVoices();
+  if (!voices.length) return null;
+  // Prefer warm/child-friendly english voices
+  const preferred = [
+    /Google US English/i,
+    /Samantha/i,
+    /Karen/i,
+    /Microsoft (Zira|Aria|Jenny)/i,
+    /English \(United States\)/i,
+    /en-US/i,
+    /en-GB/i,
+  ];
+  for (const re of preferred) {
+    const v = voices.find((v) => re.test(v.name) || re.test(v.lang));
+    if (v) return v;
+  }
+  return voices.find((v) => v.lang?.startsWith("en")) ?? voices[0];
+}
+
+if (typeof window !== "undefined" && window.speechSynthesis) {
+  const load = () => {
+    preferredVoice = pickVoice();
+    voicesReady = true;
+  };
+  load();
+  window.speechSynthesis.onvoiceschanged = load;
+}
 
 export function stopSpeaking() {
-  if (typeof window !== "undefined") window.speechSynthesis?.cancel();
-  if (current) {
-    current.pause();
-    current.onended = null;
-    current.onerror = null;
-    current = null;
-  }
+  if (typeof window === "undefined") return;
+  window.speechSynthesis?.cancel();
+  current = null;
 }
 
-async function getUrl(text: string): Promise<string | null> {
-  if (skipRemoteTts) return null;
-  const hit = cache.get(text);
-  if (hit) return hit;
-  let p = inflight.get(text);
-  if (!p) {
-    p = (async () => {
-      const { audio, fallback } = await tts({ data: { text } });
-      if (!audio) {
-        if (fallback === "quota_or_billing" || fallback === "missing_key") skipRemoteTts = true;
-        return null;
-      }
-      const url = `data:audio/mpeg;base64,${audio}`;
-      cache.set(text, url);
-      return url;
-    })();
-    inflight.set(text, p);
-    void p.then(
-      () => inflight.delete(text),
-      () => inflight.delete(text),
-    );
-  }
-  return p;
+export function speak(text: string, opts?: { pitch?: number; rate?: number }) {
+  if (typeof window === "undefined") return;
+  const synth = window.speechSynthesis;
+  if (!synth) return;
+  // Must run synchronously inside the gesture — no awaits before .speak().
+  synth.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  if (!preferredVoice && voicesReady) preferredVoice = pickVoice();
+  if (preferredVoice) u.voice = preferredVoice;
+  u.lang = preferredVoice?.lang ?? "en-US";
+  u.rate = opts?.rate ?? 0.95;
+  u.pitch = opts?.pitch ?? 1.25;
+  u.volume = 1;
+  current = u;
+  synth.speak(u);
 }
 
-function fallback(text: string, onWord?: (index: number) => void): Promise<void> {
+/** Speak with optional per-word callback. Resolves when finished. */
+export function speakText(
+  text: string,
+  onWord?: (index: number) => void,
+  opts?: { pitch?: number; rate?: number },
+): Promise<void> {
   if (typeof window === "undefined") return Promise.resolve();
   const synth = window.speechSynthesis;
   if (!synth) return Promise.resolve();
   synth.cancel();
   const u = new SpeechSynthesisUtterance(text);
-  u.rate = 0.9;
-  u.pitch = 1.2;
+  if (!preferredVoice && voicesReady) preferredVoice = pickVoice();
+  if (preferredVoice) u.voice = preferredVoice;
+  u.lang = preferredVoice?.lang ?? "en-US";
+  u.rate = opts?.rate ?? 0.95;
+  u.pitch = opts?.pitch ?? 1.25;
+  current = u;
+
   return new Promise((resolve) => {
     let timer = 0;
     const words = text.split(/\s+/).filter(Boolean);
-    const stepMs = 420;
     const cleanup = () => {
       if (timer) window.clearInterval(timer);
       resolve();
     };
-    u.onstart = () => {
-      if (!onWord) return;
-      let index = 0;
-      onWord(index);
-      timer = window.setInterval(() => {
-        index += 1;
-        if (index < words.length) onWord(index);
-      }, stepMs);
-    };
+    if (onWord) {
+      let i = 0;
+      u.onboundary = (e) => {
+        if (e.name === "word") {
+          onWord(i);
+          i += 1;
+        }
+      };
+      u.onstart = () => {
+        // Fallback timer if onboundary doesn't fire (some browsers)
+        let idx = 0;
+        onWord(idx);
+        timer = window.setInterval(() => {
+          idx += 1;
+          if (idx < words.length) onWord(idx);
+        }, 420);
+      };
+    }
     u.onend = cleanup;
     u.onerror = cleanup;
     synth.speak(u);
   });
 }
 
-/** Fire-and-forget speak. */
-export function speak(text: string) {
-  void speakText(text).catch(() => {});
-}
-
-/** Speak with optional per-word callback. Resolves when audio finishes. */
-export async function speakText(
-  text: string,
-  onWord?: (index: number) => void,
-): Promise<void> {
-  if (typeof window === "undefined") return;
-  stopSpeaking();
-  let url: string | null;
-  try {
-    url = await getUrl(text);
-  } catch {
-    await fallback(text, onWord);
-    return;
-  }
-  if (!url) {
-    await fallback(text, onWord);
-    return;
-  }
-  const audio = new Audio(url);
-  current = audio;
-  await new Promise<void>((resolve) => {
-    const timers: number[] = [];
-    const cleanup = () => {
-      timers.forEach((t) => window.clearTimeout(t));
-      if (current === audio) current = null;
-      resolve();
-    };
-    audio.onloadedmetadata = () => {
-      if (onWord && isFinite(audio.duration) && audio.duration > 0) {
-        const words = text.split(/\s+/).filter(Boolean);
-        const per = (audio.duration * 1000) / Math.max(1, words.length);
-        words.forEach((_, i) => {
-          timers.push(
-            window.setTimeout(() => {
-              if (current === audio) onWord(i);
-            }, i * per),
-          );
-        });
-      }
-    };
-    audio.onended = cleanup;
-    audio.onerror = cleanup;
-    audio.play().catch(cleanup);
-  });
-}
-
-/** Pre-warm cache (best effort). */
-export function prewarm(texts: string[]) {
-  texts.forEach((t) => {
-    if (!cache.has(t) && !inflight.has(t)) getUrl(t).catch(() => {});
-  });
+export function prewarm(_texts: string[]) {
+  /* no-op with browser TTS */
 }
