@@ -6,6 +6,7 @@ let current: HTMLAudioElement | null = null;
 let skipRemoteTts = false;
 
 export function stopSpeaking() {
+  if (typeof window !== "undefined") window.speechSynthesis?.cancel();
   if (current) {
     current.pause();
     current.onended = null;
@@ -37,7 +38,7 @@ async function getUrl(text: string): Promise<string> {
 }
 
 function fallback(text: string, onWord?: (index: number) => void): Promise<void> {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined") return Promise.resolve();
   const synth = window.speechSynthesis;
   if (!synth) return Promise.resolve();
   synth.cancel();
