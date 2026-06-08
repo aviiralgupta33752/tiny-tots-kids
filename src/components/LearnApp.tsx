@@ -338,15 +338,16 @@ function MatchGame() {
     return { items, answer };
   }
 
+  function sayPrompt() {
+    speak(`Find the letter ${set.current.answer.letter}`);
+  }
+
   function next() {
     set.current = rollSet();
     setPicked(null);
     setCorrect(false);
     setRound((r) => r + 1);
-    setTimeout(() => speak(`Find the letter ${set.current.answer.letter}`), 200);
   }
-
-  useEffect(() => { speak(`Find the letter ${set.current.answer.letter}`); }, []);
 
   function pick(letter: string) {
     setPicked(letter);
@@ -361,7 +362,7 @@ function MatchGame() {
       <div className="card-soft mx-auto max-w-3xl p-6 text-center">
         <p className="mb-2 text-sm font-semibold text-muted-foreground">Find this letter:</p>
         <button
-          onClick={() => speak(`Find the letter ${set.current.answer.letter}`)}
+          onClick={sayPrompt}
           className="mb-6 inline-flex items-center gap-3 rounded-2xl bg-lilac px-6 py-4 font-display text-2xl font-bold shadow-md"
         >
           🔊 Listen again
