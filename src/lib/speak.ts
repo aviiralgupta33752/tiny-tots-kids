@@ -1,7 +1,7 @@
 import { tts } from "./tts.functions";
 
 const cache = new Map<string, string>();
-const inflight = new Map<string, Promise<string>>();
+const inflight = new Map<string, Promise<string | null>>();
 let current: HTMLAudioElement | null = null;
 let skipRemoteTts = false;
 
@@ -83,7 +83,7 @@ export async function speakText(
 ): Promise<void> {
   if (typeof window === "undefined") return;
   stopSpeaking();
-  let url: string;
+  let url: string | null;
   try {
     url = await getUrl(text);
   } catch {
