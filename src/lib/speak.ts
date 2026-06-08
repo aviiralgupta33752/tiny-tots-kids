@@ -3,6 +3,7 @@ import { tts } from "./tts.functions";
 const cache = new Map<string, string>();
 const inflight = new Map<string, Promise<string>>();
 let current: HTMLAudioElement | null = null;
+let skipRemoteTts = false;
 
 export function stopSpeaking() {
   if (current) {
@@ -14,12 +15,17 @@ export function stopSpeaking() {
 }
 
 async function getUrl(text: string): Promise<string> {
+  if (skipRemoteTts) throw new Error("Remote TTS disabled for this session");
   const hit = cache.get(text);
   if (hit) return hit;
   let p = inflight.get(text);
   if (!p) {
     p = (async () => {
-      const { audio } = await tts({ data: { text } });
+      const { audio, fallback } = await tts({ data: { text } });
+      if (!audio) {
+        if (fallback === "quota_or_billing" || fallback === "missing_key") skipRemoteTts = true;
+        throw new Error(`Remote TTS unavailable: ${fallback ?? "unknown"}`);
+      }
       const url = `data:audio/mpeg;base64,${audio}`;
       cache.set(text, url);
       return url;
@@ -30,15 +36,35 @@ async function getUrl(text: string): Promise<string> {
   return p;
 }
 
-function fallback(text: string) {
+function fallback(text: string, onWord?: (index: number) => void): Promise<void> {
   if (typeof window === "undefined") return;
   const synth = window.speechSynthesis;
-  if (!synth) return;
+  if (!synth) return Promise.resolve();
   synth.cancel();
   const u = new SpeechSynthesisUtterance(text);
   u.rate = 0.9;
   u.pitch = 1.2;
-  synth.speak(u);
+  return new Promise((resolve) => {
+    let timer = 0;
+    const words = text.split(/\s+/).filter(Boolean);
+    const stepMs = 420;
+    const cleanup = () => {
+      if (timer) window.clearInterval(timer);
+      resolve();
+    };
+    u.onstart = () => {
+      if (!onWord) return;
+      let index = 0;
+      onWord(index);
+      timer = window.setInterval(() => {
+        index += 1;
+        if (index < words.length) onWord(index);
+      }, stepMs);
+    };
+    u.onend = cleanup;
+    u.onerror = cleanup;
+    synth.speak(u);
+  });
 }
 
 /** Fire-and-forget speak. */
@@ -57,7 +83,7 @@ export async function speakText(
   try {
     url = await getUrl(text);
   } catch {
-    fallback(text);
+    await fallback(text, onWord);
     return;
   }
   const audio = new Audio(url);
