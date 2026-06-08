@@ -346,6 +346,7 @@ function MatchGame() {
     setPicked(letter);
     const ok = letter === set.current.answer.letter;
     setCorrect(ok);
+    if (ok) addStars(1);
     speak(ok ? "Yay! That's right!" : `Try again. Find ${set.current.answer.letter}.`);
   }
 
@@ -409,7 +410,10 @@ function QuizGame() {
     if (picked) return;
     setPicked(word);
     const ok = word === q.current.answer.word;
-    if (ok) setScore((s) => s + 1);
+    if (ok) {
+      setScore((s) => s + 1);
+      addStars(1);
+    }
     speak(ok ? "Correct!" : `The answer is ${q.current.answer.word}`);
   }
   function next() {
