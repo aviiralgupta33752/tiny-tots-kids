@@ -17,8 +17,9 @@ export function addStars(n = 1) {
 }
 
 export function useStars() {
-  const [stars, setStars] = useState<number>(() => read());
+  const [stars, setStars] = useState<number>(0);
   useEffect(() => {
+    setStars(read());
     listeners.add(setStars);
     return () => {
       listeners.delete(setStars);

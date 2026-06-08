@@ -4,6 +4,7 @@
 let current: SpeechSynthesisUtterance | null = null;
 let voicesReady = false;
 let preferredVoice: SpeechSynthesisVoice | null = null;
+let unlocked = false;
 
 function pickVoice() {
   if (typeof window === "undefined") return null;
@@ -43,21 +44,42 @@ export function stopSpeaking() {
   current = null;
 }
 
+function makeUtterance(text: string, opts?: { pitch?: number; rate?: number }) {
+  const u = new SpeechSynthesisUtterance(text);
+  preferredVoice = pickVoice() ?? preferredVoice;
+  if (preferredVoice) u.voice = preferredVoice;
+  u.lang = preferredVoice?.lang ?? "en-US";
+  u.rate = opts?.rate ?? 0.9;
+  u.pitch = opts?.pitch ?? 1.08;
+  u.volume = 1;
+  return u;
+}
+
+function unlockSpeech(synth: SpeechSynthesis) {
+  if (unlocked) return;
+  unlocked = true;
+  synth.cancel();
+  synth.resume();
+}
+
 export function speak(text: string, opts?: { pitch?: number; rate?: number }) {
   if (typeof window === "undefined") return;
   const synth = window.speechSynthesis;
   if (!synth) return;
   // Must run synchronously inside the gesture — no awaits before .speak().
+  unlockSpeech(synth);
   synth.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  if (!preferredVoice && voicesReady) preferredVoice = pickVoice();
-  if (preferredVoice) u.voice = preferredVoice;
-  u.lang = preferredVoice?.lang ?? "en-US";
-  u.rate = opts?.rate ?? 0.95;
-  u.pitch = opts?.pitch ?? 1.25;
-  u.volume = 1;
+  const u = makeUtterance(text, opts);
   current = u;
+  u.onerror = () => {
+    synth.cancel();
+    const retry = makeUtterance(text, opts);
+    current = retry;
+    synth.speak(retry);
+    synth.resume();
+  };
   synth.speak(u);
+  synth.resume();
 }
 
 /** Speak with optional per-word callback. Resolves when finished. */
@@ -69,13 +91,9 @@ export function speakText(
   if (typeof window === "undefined") return Promise.resolve();
   const synth = window.speechSynthesis;
   if (!synth) return Promise.resolve();
+  unlockSpeech(synth);
   synth.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  if (!preferredVoice && voicesReady) preferredVoice = pickVoice();
-  if (preferredVoice) u.voice = preferredVoice;
-  u.lang = preferredVoice?.lang ?? "en-US";
-  u.rate = opts?.rate ?? 0.95;
-  u.pitch = opts?.pitch ?? 1.25;
+  const u = makeUtterance(text, opts);
   current = u;
 
   return new Promise((resolve) => {
@@ -106,6 +124,7 @@ export function speakText(
     u.onend = cleanup;
     u.onerror = cleanup;
     synth.speak(u);
+    if (synth.paused) synth.resume();
   });
 }
 

@@ -77,15 +77,7 @@ function BookReader({ story, onExit }: { story: Story; onExit: () => void }) {
     }, 350);
   }
 
-  useEffect(() => {
-    // auto-start narration when reader opens
-    const t = setTimeout(() => readPage(0), 400);
-    return () => {
-      clearTimeout(t);
-      stopSpeaking();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  useEffect(() => () => stopSpeaking(), []);
 
   return (
     <section className="animate-pop">
