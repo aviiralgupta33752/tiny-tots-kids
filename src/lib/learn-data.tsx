@@ -48,14 +48,14 @@ export const NUMBERS = Array.from({ length: 10 }, (_, i) => {
 });
 
 export const COLORS = [
-  { name: "Red", hex: "#ff8a8a", emoji: "🍓" },
-  { name: "Orange", hex: "#ffb480", emoji: "🥕" },
-  { name: "Yellow", hex: "#ffe680", emoji: "🌼" },
-  { name: "Green", hex: "#a8e6a3", emoji: "🌿" },
-  { name: "Blue", hex: "#a0c4ff", emoji: "🫐" },
-  { name: "Purple", hex: "#c8a8ff", emoji: "🍇" },
-  { name: "Pink", hex: "#ffc1d8", emoji: "🌸" },
-  { name: "Brown", hex: "#caa472", emoji: "🍪" },
+  { name: "Red", hex: "#ff8a8a", emoji: "🍓", phrase: "Red. A red strawberry." },
+  { name: "Orange", hex: "#ffb480", emoji: "🥕", phrase: "Orange. An orange carrot." },
+  { name: "Yellow", hex: "#ffe680", emoji: "🌼", phrase: "Yellow. A yellow flower." },
+  { name: "Green", hex: "#a8e6a3", emoji: "🌿", phrase: "Green. A green leaf." },
+  { name: "Blue", hex: "#a0c4ff", emoji: "🫐", phrase: "Blue. A blue berry." },
+  { name: "Purple", hex: "#c8a8ff", emoji: "🍇", phrase: "Purple. Purple grapes." },
+  { name: "Pink", hex: "#ffc1d8", emoji: "🌸", phrase: "Pink. A pink blossom." },
+  { name: "Brown", hex: "#caa472", emoji: "🍪", phrase: "Brown. A brown cookie." },
 ];
 
 export const SHAPES = [

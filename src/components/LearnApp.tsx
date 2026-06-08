@@ -144,7 +144,7 @@ function AlphabetGrid() {
           <Tile
             key={a.letter}
             tone={TONES[i % TONES.length]}
-            onClick={() => speak(`${a.letter}. ${a.word}.`)}
+            onClick={() => speak(`${a.letter}. ${a.letter} is for ${a.word}.`)}
           >
             <span className="text-5xl font-bold font-display sm:text-6xl">{a.letter}</span>
             <span className="text-3xl">{a.emoji}</span>
@@ -164,7 +164,7 @@ function NumberGrid() {
           <Tile
             key={n.n}
             tone={TONES[i % TONES.length]}
-            onClick={() => speak(`${n.n}. ${n.word}.`)}
+            onClick={() => speak(n.n === 1 ? `One. One star.` : `${n.word}. ${n.n} stars.`)}
             big
           >
             <span className="text-6xl font-bold font-display sm:text-7xl">{n.n}</span>
@@ -184,7 +184,7 @@ function ColorGrid() {
         {COLORS.map((c) => (
           <button
             key={c.name}
-            onClick={() => speak(c.name)}
+            onClick={() => speak(c.phrase)}
             className="card-soft tile-pop tile-pop-hover flex flex-col items-center gap-3 p-5"
           >
             <div
@@ -222,18 +222,24 @@ function AnimalGrid() {
   return (
     <Section title="Animal Sounds" subtitle="Tap an animal to hear what it says.">
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-        {ANIMALS.map((a, i) => (
-          <Tile
-            key={a.name}
-            tone={TONES[i % TONES.length]}
-            onClick={() => speak(`${a.name} says ${a.sound}!`)}
-            big
-          >
-            <span className="text-7xl">{a.emoji}</span>
-            <span className="text-lg font-bold font-display">{a.name}</span>
-            <span className="text-xs text-foreground/70">says “{a.sound}”</span>
-          </Tile>
-        ))}
+        {ANIMALS.map((a, i) => {
+          const big = /Cow|Horse|Lion|Pig/.test(a.name);
+          const small = /Bee|Cat|Duck|Frog|Owl/.test(a.name);
+          const pitch = big ? 0.6 : small ? 1.7 : 1.2;
+          const rate = big ? 0.8 : small ? 1.05 : 0.95;
+          return (
+            <Tile
+              key={a.name}
+              tone={TONES[i % TONES.length]}
+              onClick={() => speak(`${a.name} says ${a.sound}! ${a.sound}!`, { pitch, rate })}
+              big
+            >
+              <span className="text-7xl">{a.emoji}</span>
+              <span className="text-lg font-bold font-display">{a.name}</span>
+              <span className="text-xs text-foreground/70">says “{a.sound}”</span>
+            </Tile>
+          );
+        })}
       </div>
     </Section>
   );
