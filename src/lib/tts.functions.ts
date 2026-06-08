@@ -1,7 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-const VOICE_ID = "acCWxmzPBgXdHwA63uzP";
+// Lily — built-in free voice (warm, friendly, kid-appropriate).
+// The originally requested library voice acCWxmzPBgXdHwA63uzP requires a paid ElevenLabs plan.
+const VOICE_ID = "pFZP5JQG7iQjIQuC4Bku";
 
 export const tts = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
