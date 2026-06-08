@@ -15,8 +15,8 @@ export function stopSpeaking() {
   }
 }
 
-async function getUrl(text: string): Promise<string> {
-  if (skipRemoteTts) throw new Error("Remote TTS disabled for this session");
+async function getUrl(text: string): Promise<string | null> {
+  if (skipRemoteTts) return null;
   const hit = cache.get(text);
   if (hit) return hit;
   let p = inflight.get(text);
@@ -25,14 +25,17 @@ async function getUrl(text: string): Promise<string> {
       const { audio, fallback } = await tts({ data: { text } });
       if (!audio) {
         if (fallback === "quota_or_billing" || fallback === "missing_key") skipRemoteTts = true;
-        throw new Error(`Remote TTS unavailable: ${fallback ?? "unknown"}`);
+        return null;
       }
       const url = `data:audio/mpeg;base64,${audio}`;
       cache.set(text, url);
       return url;
     })();
     inflight.set(text, p);
-    p.finally(() => inflight.delete(text));
+    void p.then(
+      () => inflight.delete(text),
+      () => inflight.delete(text),
+    );
   }
   return p;
 }
@@ -84,6 +87,10 @@ export async function speakText(
   try {
     url = await getUrl(text);
   } catch {
+    await fallback(text, onWord);
+    return;
+  }
+  if (!url) {
     await fallback(text, onWord);
     return;
   }
