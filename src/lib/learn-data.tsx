@@ -82,17 +82,4 @@ export const ANIMALS = [
   { name: "Rooster", emoji: "🐔", sound: "Cock-a-doodle-doo" },
 ];
 
-export function speak(text: string, rate = 0.9) {
-  if (typeof window === "undefined") return;
-  const synth = window.speechSynthesis;
-  if (!synth) return;
-  synth.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.rate = rate;
-  u.pitch = 1.2;
-  const voices = synth.getVoices();
-  const preferred = voices.find(v => /female|samantha|karen|google uk english female|kid/i.test(v.name))
-    || voices.find(v => v.lang.startsWith("en"));
-  if (preferred) u.voice = preferred;
-  synth.speak(u);
-}
+export { speak } from "./speak";

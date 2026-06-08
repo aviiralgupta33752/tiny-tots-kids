@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { ALPHABET, ANIMALS, COLORS, NUMBERS, SHAPES, TONES, speak, toneClass, type Tone } from "@/lib/learn-data";
+import { StoryTime } from "@/components/StoryTime";
+import { addStars, earnedStickers, useStars } from "@/lib/rewards";
 
-type TabKey = "abc" | "123" | "colors" | "shapes" | "animals" | "trace" | "match" | "quiz";
+type TabKey = "abc" | "123" | "colors" | "shapes" | "animals" | "story" | "trace" | "match" | "quiz" | "rewards";
 
 const TABS: { key: TabKey; label: string; emoji: string }[] = [
   { key: "abc", label: "ABCs", emoji: "🔤" },
@@ -9,9 +11,11 @@ const TABS: { key: TabKey; label: string; emoji: string }[] = [
   { key: "colors", label: "Colors", emoji: "🎨" },
   { key: "shapes", label: "Shapes", emoji: "⭐" },
   { key: "animals", label: "Animals", emoji: "🐾" },
+  { key: "story", label: "Stories", emoji: "📖" },
   { key: "trace", label: "Trace", emoji: "✏️" },
   { key: "match", label: "Match", emoji: "🧩" },
   { key: "quiz", label: "Quiz", emoji: "❓" },
+  { key: "rewards", label: "Rewards", emoji: "🏆" },
 ];
 
 export function LearnApp() {
