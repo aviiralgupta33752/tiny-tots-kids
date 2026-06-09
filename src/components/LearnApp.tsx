@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { ALPHABET, ANIMALS, COLORS, NUMBERS, SHAPES, TONES, speak, toneClass, type Tone } from "@/lib/learn-data";
 import { StoryTime } from "@/components/StoryTime";
 import { addStars, earnedStickers, useStars } from "@/lib/rewards";
+import { prewarm } from "@/lib/speak";
 
 type TabKey = "abc" | "123" | "colors" | "shapes" | "animals" | "story" | "trace" | "match" | "quiz" | "rewards";
 
@@ -21,6 +22,20 @@ const TABS: { key: TabKey; label: string; emoji: string }[] = [
 export function LearnApp() {
   const [tab, setTab] = useState<TabKey>("abc");
   const stars = useStars();
+
+  useEffect(() => {
+    const warm = () => {
+      prewarm([
+        ...ALPHABET.map((a) => `${a.letter}. ${a.letter} is for ${a.word}.`),
+        ...NUMBERS.map((n) => (n.n === 1 ? `One. One star.` : `${n.word}. ${n.n} stars.`)),
+        ...COLORS.map((c) => c.phrase),
+      ]);
+    };
+    const requestIdle = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 300));
+    const cancelIdle = window.cancelIdleCallback ?? window.clearTimeout;
+    const id = requestIdle(warm);
+    return () => cancelIdle(id as number);
+  }, []);
 
   return (
     <div className="min-h-screen px-4 pb-16 pt-6 sm:px-8">

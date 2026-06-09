@@ -1,133 +1,122 @@
-// Browser-native speech: instant, no quota, works offline.
-// Runs synchronously inside click handlers so browsers don't block it.
+import meSpeak from "mespeak";
+import meSpeakConfig from "mespeak/src/mespeak_config.json";
+import usVoice from "mespeak/voices/en/en-us.json";
 
-let current: SpeechSynthesisUtterance | null = null;
-let voicesReady = false;
-let preferredVoice: SpeechSynthesisVoice | null = null;
-let unlocked = false;
+type SpeakOptions = { pitch?: number; rate?: number };
 
-function pickVoice() {
-  if (typeof window === "undefined") return null;
-  const synth = window.speechSynthesis;
-  if (!synth) return null;
-  const voices = synth.getVoices();
-  if (!voices.length) return null;
-  // Prefer warm/child-friendly english voices
-  const preferred = [
-    /Google US English/i,
-    /Samantha/i,
-    /Karen/i,
-    /Microsoft (Zira|Aria|Jenny)/i,
-    /English \(United States\)/i,
-    /en-US/i,
-    /en-GB/i,
-  ];
-  for (const re of preferred) {
-    const v = voices.find((v) => re.test(v.name) || re.test(v.lang));
-    if (v) return v;
-  }
-  return voices.find((v) => v.lang?.startsWith("en")) ?? voices[0];
+// Offline generated audio: no paid credits and no dependency on browser voices.
+let audio: HTMLAudioElement | null = null;
+let ready = false;
+let playId = 0;
+const cache = new Map<string, string>();
+
+function ensureReady() {
+  if (ready || typeof window === "undefined") return;
+  meSpeak.loadConfig(meSpeakConfig);
+  meSpeak.loadVoice(usVoice);
+  ready = true;
 }
 
-if (typeof window !== "undefined" && window.speechSynthesis) {
-  const load = () => {
-    preferredVoice = pickVoice();
-    voicesReady = true;
+function toVoiceOptions(opts?: SpeakOptions) {
+  return {
+    rawdata: "mime" as const,
+    amplitude: 100,
+    pitch: Math.round(Math.min(99, Math.max(25, (opts?.pitch ?? 1.12) * 50))),
+    speed: Math.round(Math.min(220, Math.max(120, (opts?.rate ?? 0.9) * 175))),
+    wordgap: 2,
+    volume: 1,
+    variant: "f2",
   };
-  load();
-  window.speechSynthesis.onvoiceschanged = load;
+}
+
+function cacheKey(text: string, opts?: SpeakOptions) {
+  const voice = toVoiceOptions(opts);
+  return `${text}|${voice.pitch}|${voice.speed}`;
+}
+
+function getAudioSrc(text: string, opts?: SpeakOptions) {
+  ensureReady();
+  const key = cacheKey(text, opts);
+  const cached = cache.get(key);
+  if (cached) return cached;
+  const src = meSpeak.speak(text, toVoiceOptions(opts));
+  if (typeof src !== "string") return null;
+  cache.set(key, src);
+  return src;
 }
 
 export function stopSpeaking() {
-  if (typeof window === "undefined") return;
-  window.speechSynthesis?.cancel();
-  current = null;
+  playId += 1;
+  meSpeak.resetQueue?.();
+  meSpeak.stop?.();
+  if (!audio) return;
+  audio.pause();
+  audio.removeAttribute("src");
+  audio = null;
 }
 
-function makeUtterance(text: string, opts?: { pitch?: number; rate?: number }) {
-  const u = new SpeechSynthesisUtterance(text);
-  preferredVoice = pickVoice() ?? preferredVoice;
-  if (preferredVoice) u.voice = preferredVoice;
-  u.lang = preferredVoice?.lang ?? "en-US";
-  u.rate = opts?.rate ?? 0.9;
-  u.pitch = opts?.pitch ?? 1.08;
-  u.volume = 1;
-  return u;
+function playGeneratedAudio(
+  text: string,
+  opts?: SpeakOptions,
+  onWord?: (index: number) => void,
+): Promise<void> {
+  if (typeof window === "undefined") return Promise.resolve();
+  const src = getAudioSrc(text, opts);
+  if (!src) return Promise.resolve();
+
+  stopSpeaking();
+  const id = playId + 1;
+  playId = id;
+  const words = text.split(/\s+/).filter(Boolean);
+  const player = new Audio(src);
+  player.volume = 1;
+  audio = player;
+
+  return new Promise((resolve) => {
+    let timer = 0;
+    let resolved = false;
+    const cleanup = () => {
+      if (resolved) return;
+      resolved = true;
+      if (timer) window.clearInterval(timer);
+      if (audio === player) audio = null;
+      resolve();
+    };
+
+    player.onplay = () => {
+      if (!onWord || !words.length || id !== playId) return;
+      let idx = 0;
+      onWord(idx);
+      const interval = Math.max(260, Math.min(560, (player.duration * 1000) / Math.max(words.length, 1)) || 430);
+      timer = window.setInterval(() => {
+        idx += 1;
+        if (idx < words.length && id === playId) onWord(idx);
+      }, interval);
+    };
+    player.onended = cleanup;
+    player.onerror = cleanup;
+    void player.play().catch((error) => {
+      console.warn("Audio failed:", error);
+      cleanup();
+    });
+  });
 }
 
-function unlockSpeech(synth: SpeechSynthesis) {
-  if (unlocked) return;
-  unlocked = true;
-  synth.cancel();
-  synth.resume();
-}
-
-export function speak(text: string, opts?: { pitch?: number; rate?: number }) {
-  if (typeof window === "undefined") return;
-  const synth = window.speechSynthesis;
-  if (!synth) return;
-  // Must run synchronously inside the gesture — no awaits before .speak().
-  unlockSpeech(synth);
-  synth.cancel();
-  const u = makeUtterance(text, opts);
-  current = u;
-  u.onerror = () => {
-    synth.cancel();
-    const retry = makeUtterance(text, opts);
-    current = retry;
-    synth.speak(retry);
-    synth.resume();
-  };
-  synth.speak(u);
-  synth.resume();
+export function speak(text: string, opts?: SpeakOptions) {
+  void playGeneratedAudio(text, opts);
 }
 
 /** Speak with optional per-word callback. Resolves when finished. */
 export function speakText(
   text: string,
   onWord?: (index: number) => void,
-  opts?: { pitch?: number; rate?: number },
+  opts?: SpeakOptions,
 ): Promise<void> {
-  if (typeof window === "undefined") return Promise.resolve();
-  const synth = window.speechSynthesis;
-  if (!synth) return Promise.resolve();
-  unlockSpeech(synth);
-  synth.cancel();
-  const u = makeUtterance(text, opts);
-  current = u;
-
-  return new Promise((resolve) => {
-    let timer = 0;
-    const words = text.split(/\s+/).filter(Boolean);
-    const cleanup = () => {
-      if (timer) window.clearInterval(timer);
-      resolve();
-    };
-    if (onWord) {
-      let i = 0;
-      u.onboundary = (e) => {
-        if (e.name === "word") {
-          onWord(i);
-          i += 1;
-        }
-      };
-      u.onstart = () => {
-        // Fallback timer if onboundary doesn't fire (some browsers)
-        let idx = 0;
-        onWord(idx);
-        timer = window.setInterval(() => {
-          idx += 1;
-          if (idx < words.length) onWord(idx);
-        }, 420);
-      };
-    }
-    u.onend = cleanup;
-    u.onerror = cleanup;
-    synth.speak(u);
-    if (synth.paused) synth.resume();
-  });
+  return playGeneratedAudio(text, opts, onWord);
 }
 
-export function prewarm(_texts: string[]) {
-  /* no-op with browser TTS */
+export function prewarm(texts: string[]) {
+  if (typeof window === "undefined") return;
+  ensureReady();
+  for (const text of texts) getAudioSrc(text);
 }
