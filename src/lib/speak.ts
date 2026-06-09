@@ -14,13 +14,32 @@ function loadVoices(): Promise<void> {
       voicesLoaded = true;
       resolve();
     };
-    // Fallback: resolve after 1s even if no event fires
     setTimeout(resolve, 1000);
   });
 }
 
 function getBestVoice(): SpeechSynthesisVoice | null {
   const voices = window.speechSynthesis.getVoices();
+
+  // Sweet, friendly female voices — ordered by preference
+  const preferredNames = [
+    "Samantha",   // macOS/iOS — warm and clear
+    "Karen",      // Australian, friendly
+    "Moira",      // Irish, gentle
+    "Tessa",      // South African, soft
+    "Victoria",   // macOS, gentle
+    "Aria",       // Windows, natural
+    "Jenny",      // Windows, warm
+    "Emma",       // Google, clear
+    "Zira",       // Windows, friendly
+  ];
+
+  for (const name of preferredNames) {
+    const match = voices.find((v) => v.name.includes(name) && v.lang.startsWith("en"));
+    if (match) return match;
+  }
+
+  // Fallback: any local English voice
   return (
     voices.find((v) => v.lang.startsWith("en-US") && v.localService) ??
     voices.find((v) => v.lang.startsWith("en")) ??
@@ -47,8 +66,10 @@ async function playUtterance(
 
   return new Promise((resolve) => {
     const utter = new SpeechSynthesisUtterance(text);
-    utter.pitch = Math.min(2, Math.max(0, opts?.pitch ?? 1.1));
-    utter.rate = Math.min(1.5, Math.max(0.5, opts?.rate ?? 0.85));
+
+    // Sweet, gentle voice settings for kids
+    utter.pitch = opts?.pitch ?? 1.25;   // slightly higher = warmer/friendlier
+    utter.rate = opts?.rate ?? 0.8;      // slower = easier for kids to follow
     utter.volume = 1;
 
     const voice = getBestVoice();
