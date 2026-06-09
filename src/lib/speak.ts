@@ -1,9 +1,52 @@
-// Browser-native speech: instant, no quota, works offline.
+import meSpeak from "mespeak";
+import meSpeakConfig from "mespeak/src/mespeak_config.json";
+import usVoice from "mespeak/voices/en/en-us.json";
+
+// Browser-native speech first, with an offline generated-audio fallback.
 // IMPORTANT: speak() must be called directly from a tap/click handler.
 
 let current: SpeechSynthesisUtterance | null = null;
 let preferredVoice: SpeechSynthesisVoice | null = null;
+let fallbackAudio: HTMLAudioElement | null = null;
+let fallbackReady = false;
 let speakId = 0;
+
+function ensureFallbackReady() {
+  if (fallbackReady || typeof window === "undefined") return;
+  meSpeak.loadConfig(meSpeakConfig);
+  meSpeak.loadVoice(usVoice);
+  fallbackReady = true;
+}
+
+function stopFallbackAudio() {
+  meSpeak.resetQueue?.();
+  meSpeak.stop?.();
+  if (!fallbackAudio) return;
+  fallbackAudio.pause();
+  fallbackAudio.src = "";
+  fallbackAudio = null;
+}
+
+function speakWithFallback(text: string, opts?: { pitch?: number; rate?: number }) {
+  if (typeof window === "undefined") return;
+  ensureFallbackReady();
+  stopFallbackAudio();
+  const pitch = Math.round(Math.min(99, Math.max(25, (opts?.pitch ?? 1.08) * 50)));
+  const speed = Math.round(Math.min(220, Math.max(120, (opts?.rate ?? 0.88) * 175)));
+  const src = meSpeak.speak(text, {
+    rawdata: "mime",
+    amplitude: 100,
+    pitch,
+    speed,
+    wordgap: 2,
+    volume: 1,
+  });
+  if (typeof src !== "string") return;
+  const audio = new Audio(src);
+  audio.volume = 1;
+  fallbackAudio = audio;
+  void audio.play().catch((error) => console.warn("Fallback audio failed:", error));
+}
 
 function getSynth() {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) return null;
@@ -53,6 +96,7 @@ export function stopSpeaking() {
   speakId += 1;
   detachCurrent();
   synth?.cancel();
+  stopFallbackAudio();
 }
 
 function makeUtterance(text: string, opts?: { pitch?: number; rate?: number }, useVoice = true) {
@@ -101,7 +145,7 @@ function startUtterance(
 export function speak(text: string, opts?: { pitch?: number; rate?: number }) {
   const synth = getSynth();
   if (!synth) {
-    console.warn("Speech is not available in this browser.");
+    speakWithFallback(text, opts);
     return;
   }
 
