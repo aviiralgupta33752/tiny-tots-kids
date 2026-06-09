@@ -2,7 +2,7 @@ import meSpeak from "mespeak";
 import meSpeakConfig from "mespeak/src/mespeak_config.json";
 import usVoice from "mespeak/voices/en/en-us.json";
 
-// Browser-native speech first, with an offline generated-audio fallback.
+// Offline generated audio first, with browser-native speech kept as a backup.
 // IMPORTANT: speak() must be called directly from a tap/click handler.
 
 let current: SpeechSynthesisUtterance | null = null;
@@ -27,10 +27,15 @@ function stopFallbackAudio() {
   fallbackAudio = null;
 }
 
-function speakWithFallback(text: string, opts?: { pitch?: number; rate?: number }) {
-  if (typeof window === "undefined") return;
+function speakWithFallback(
+  text: string,
+  opts?: { pitch?: number; rate?: number },
+  onWord?: (index: number) => void,
+): Promise<void> {
+  if (typeof window === "undefined") return Promise.resolve();
   ensureFallbackReady();
   stopFallbackAudio();
+  const words = text.split(/\s+/).filter(Boolean);
   const pitch = Math.round(Math.min(99, Math.max(25, (opts?.pitch ?? 1.08) * 50)));
   const speed = Math.round(Math.min(220, Math.max(120, (opts?.rate ?? 0.88) * 175)));
   const src = meSpeak.speak(text, {
@@ -40,12 +45,39 @@ function speakWithFallback(text: string, opts?: { pitch?: number; rate?: number 
     speed,
     wordgap: 2,
     volume: 1,
+    variant: "f2",
   });
-  if (typeof src !== "string") return;
+  if (typeof src !== "string") return Promise.resolve();
   const audio = new Audio(src);
   audio.volume = 1;
   fallbackAudio = audio;
-  void audio.play().catch((error) => console.warn("Fallback audio failed:", error));
+
+  return new Promise((resolve) => {
+    let timer = 0;
+    let resolved = false;
+    const cleanup = () => {
+      if (resolved) return;
+      resolved = true;
+      if (timer) window.clearInterval(timer);
+      if (fallbackAudio === audio) fallbackAudio = null;
+      resolve();
+    };
+    audio.onplay = () => {
+      if (!onWord || !words.length) return;
+      let idx = 0;
+      onWord(idx);
+      timer = window.setInterval(() => {
+        idx += 1;
+        if (idx < words.length) onWord(idx);
+      }, 430);
+    };
+    audio.onended = cleanup;
+    audio.onerror = cleanup;
+    void audio.play().catch((error) => {
+      console.warn("Fallback audio failed:", error);
+      cleanup();
+    });
+  });
 }
 
 function getSynth() {
@@ -143,9 +175,11 @@ function startUtterance(
 }
 
 export function speak(text: string, opts?: { pitch?: number; rate?: number }) {
+  void speakWithFallback(text, opts);
+  return;
+
   const synth = getSynth();
   if (!synth) {
-    speakWithFallback(text, opts);
     return;
   }
 
@@ -164,6 +198,8 @@ export function speakText(
   onWord?: (index: number) => void,
   opts?: { pitch?: number; rate?: number },
 ): Promise<void> {
+  return speakWithFallback(text, opts, onWord);
+
   const synth = getSynth();
   if (!synth) return Promise.resolve();
 
