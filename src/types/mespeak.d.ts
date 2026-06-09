@@ -18,7 +18,7 @@ declare module "mespeak" {
     canPlay(): boolean;
   };
 
-  export = meSpeak;
+  export default meSpeak;
 }
 
 declare module "mespeak/src/mespeak_config.json" {
