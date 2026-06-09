@@ -1,122 +1,91 @@
-import meSpeak from "mespeak";
-import meSpeakConfig from "mespeak/src/mespeak_config.json";
-import usVoice from "mespeak/voices/en/en-us.json";
-
 type SpeakOptions = { pitch?: number; rate?: number };
 
-// Offline generated audio: no paid credits and no dependency on browser voices.
-let audio: HTMLAudioElement | null = null;
-let ready = false;
-let playId = 0;
-const cache = new Map<string, string>();
+let currentUtterance: SpeechSynthesisUtterance | null = null;
 
-function ensureReady() {
-  if (ready || typeof window === "undefined") return;
-  meSpeak.loadConfig(meSpeakConfig);
-  meSpeak.loadVoice(usVoice);
-  ready = true;
-}
-
-function toVoiceOptions(opts?: SpeakOptions) {
-  return {
-    rawdata: "mime" as const,
-    amplitude: 100,
-    pitch: Math.round(Math.min(99, Math.max(25, (opts?.pitch ?? 1.12) * 50))),
-    speed: Math.round(Math.min(220, Math.max(120, (opts?.rate ?? 0.9) * 175))),
-    wordgap: 2,
-    volume: 1,
-    variant: "f2",
-  };
-}
-
-function cacheKey(text: string, opts?: SpeakOptions) {
-  const voice = toVoiceOptions(opts);
-  return `${text}|${voice.pitch}|${voice.speed}`;
-}
-
-function getAudioSrc(text: string, opts?: SpeakOptions) {
-  ensureReady();
-  const key = cacheKey(text, opts);
-  const cached = cache.get(key);
-  if (cached) return cached;
-  const src = meSpeak.speak(text, toVoiceOptions(opts));
-  if (typeof src !== "string") return null;
-  cache.set(key, src);
-  return src;
+function getBestVoice(): SpeechSynthesisVoice | null {
+  const voices = window.speechSynthesis.getVoices();
+  // Prefer child-friendly / US English voices
+  const preferred = voices.find(
+    (v) =>
+      v.lang.startsWith("en") &&
+      /samantha|karen|moira|victoria|zira|aria|jenny|guy|emma|brian/i.test(v.name)
+  );
+  return preferred ?? voices.find((v) => v.lang.startsWith("en")) ?? voices[0] ?? null;
 }
 
 export function stopSpeaking() {
-  playId += 1;
-  meSpeak.resetQueue?.();
-  meSpeak.stop?.();
-  if (!audio) return;
-  audio.pause();
-  audio.removeAttribute("src");
-  audio = null;
+  if (typeof window === "undefined") return;
+  window.speechSynthesis.cancel();
+  currentUtterance = null;
 }
 
-function playGeneratedAudio(
+function playUtterance(
   text: string,
   opts?: SpeakOptions,
-  onWord?: (index: number) => void,
+  onWord?: (index: number) => void
 ): Promise<void> {
-  if (typeof window === "undefined") return Promise.resolve();
-  const src = getAudioSrc(text, opts);
-  if (!src) return Promise.resolve();
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+    return Promise.resolve();
+  }
 
   stopSpeaking();
-  const id = playId + 1;
-  playId = id;
-  const words = text.split(/\s+/).filter(Boolean);
-  const player = new Audio(src);
-  player.volume = 1;
-  audio = player;
 
   return new Promise((resolve) => {
-    let timer = 0;
-    let resolved = false;
-    const cleanup = () => {
-      if (resolved) return;
-      resolved = true;
-      if (timer) window.clearInterval(timer);
-      if (audio === player) audio = null;
+    const utter = new SpeechSynthesisUtterance(text);
+    currentUtterance = utter;
+
+    utter.pitch = Math.min(2, Math.max(0, opts?.pitch ?? 1.1));
+    utter.rate = Math.min(2, Math.max(0.5, opts?.rate ?? 0.88));
+    utter.volume = 1;
+
+    // Set voice — voices may not be loaded yet, so try after a tick
+    const assignVoice = () => {
+      const voice = getBestVoice();
+      if (voice) utter.voice = voice;
+    };
+    assignVoice();
+    if (!utter.voice) {
+      window.speechSynthesis.onvoiceschanged = () => {
+        assignVoice();
+        window.speechSynthesis.onvoiceschanged = null;
+      };
+    }
+
+    if (onWord) {
+      const words = text.split(/\s+/).filter(Boolean);
+      let idx = 0;
+      utter.onboundary = (e) => {
+        if (e.name === "word" && idx < words.length) {
+          onWord(idx++);
+        }
+      };
+    }
+
+    utter.onend = () => {
+      currentUtterance = null;
+      resolve();
+    };
+    utter.onerror = () => {
+      currentUtterance = null;
       resolve();
     };
 
-    player.onplay = () => {
-      if (!onWord || !words.length || id !== playId) return;
-      let idx = 0;
-      onWord(idx);
-      const interval = Math.max(260, Math.min(560, (player.duration * 1000) / Math.max(words.length, 1)) || 430);
-      timer = window.setInterval(() => {
-        idx += 1;
-        if (idx < words.length && id === playId) onWord(idx);
-      }, interval);
-    };
-    player.onended = cleanup;
-    player.onerror = cleanup;
-    void player.play().catch((error) => {
-      console.warn("Audio failed:", error);
-      cleanup();
-    });
+    window.speechSynthesis.speak(utter);
   });
 }
 
 export function speak(text: string, opts?: SpeakOptions) {
-  void playGeneratedAudio(text, opts);
+  void playUtterance(text, opts);
 }
 
 /** Speak with optional per-word callback. Resolves when finished. */
 export function speakText(
   text: string,
   onWord?: (index: number) => void,
-  opts?: SpeakOptions,
+  opts?: SpeakOptions
 ): Promise<void> {
-  return playGeneratedAudio(text, opts, onWord);
+  return playUtterance(text, opts, onWord);
 }
 
-export function prewarm(texts: string[]) {
-  if (typeof window === "undefined") return;
-  ensureReady();
-  for (const text of texts) getAudioSrc(text);
-}
+// No-op: Web Speech API doesn't need pre-warming
+export function prewarm(_texts: string[]) {}
