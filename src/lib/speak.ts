@@ -20,26 +20,11 @@ function loadVoices(): Promise<void> {
 
 function getBestVoice(): SpeechSynthesisVoice | null {
   const voices = window.speechSynthesis.getVoices();
-
-  // Sweet, friendly female voices — ordered by preference
-  const preferredNames = [
-    "Samantha",   // macOS/iOS — warm and clear
-    "Karen",      // Australian, friendly
-    "Moira",      // Irish, gentle
-    "Tessa",      // South African, soft
-    "Victoria",   // macOS, gentle
-    "Aria",       // Windows, natural
-    "Jenny",      // Windows, warm
-    "Emma",       // Google, clear
-    "Zira",       // Windows, friendly
-  ];
-
+  const preferredNames = ["Samantha", "Karen", "Moira", "Tessa", "Victoria", "Aria", "Jenny", "Emma", "Zira"];
   for (const name of preferredNames) {
     const match = voices.find((v) => v.name.includes(name) && v.lang.startsWith("en"));
     if (match) return match;
   }
-
-  // Fallback: any local English voice
   return (
     voices.find((v) => v.lang.startsWith("en-US") && v.localService) ??
     voices.find((v) => v.lang.startsWith("en")) ??
@@ -67,9 +52,9 @@ async function playUtterance(
   return new Promise((resolve) => {
     const utter = new SpeechSynthesisUtterance(text);
 
-    // Sweet, gentle voice settings for kids
-    utter.pitch = opts?.pitch ?? 1.25;   // slightly higher = warmer/friendlier
-    utter.rate = opts?.rate ?? 0.8;      // slower = easier for kids to follow
+    // Slow, warm, gentle — not scary for kids
+    utter.pitch = opts?.pitch ?? 1.2;
+    utter.rate = opts?.rate ?? 0.65;  // nice and slow
     utter.volume = 1;
 
     const voice = getBestVoice();
