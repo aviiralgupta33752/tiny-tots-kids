@@ -1,27 +1,39 @@
-import { useEffect, useRef, useState } from "react";
+ import { useEffect, useRef, useState } from "react";
 import { ALPHABET, ANIMALS, COLORS, NUMBERS, SHAPES, TONES, speak, toneClass, type Tone } from "@/lib/learn-data";
 import { StoryTime } from "@/components/StoryTime";
-import { addStars, earnedStickers, useStars } from "@/lib/rewards";
+import { addStars, earnedStickers, useStars, useStreak, useDifficulty, getCurrentLevel, getNextLevel, LEVELS } from "@/lib/rewards";
 import { prewarm } from "@/lib/speak";
+import { SpellItGame } from "@/components/SpellItGame";
+import { WordBuilderGame } from "@/components/WordBuilderGame";
+import { CountingGame, RhymeTimeGame } from "@/components/CountingAndRhymeGames";
+import { Mascot, ProgressBar } from "@/components/GameUtils";
 
-type TabKey = "abc" | "123" | "colors" | "shapes" | "animals" | "story" | "trace" | "match" | "quiz" | "rewards";
+type TabKey = "abc" | "123" | "colors" | "shapes" | "animals" | "story" | "trace" | "match" | "quiz" | "spell" | "wordbuild" | "count" | "rhyme" | "rewards";
 
 const TABS: { key: TabKey; label: string; emoji: string }[] = [
-  { key: "abc", label: "ABCs", emoji: "🔤" },
-  { key: "123", label: "123s", emoji: "🔢" },
-  { key: "colors", label: "Colors", emoji: "🎨" },
-  { key: "shapes", label: "Shapes", emoji: "⭐" },
-  { key: "animals", label: "Animals", emoji: "🐾" },
-  { key: "story", label: "Stories", emoji: "📖" },
-  { key: "trace", label: "Trace", emoji: "✏️" },
-  { key: "match", label: "Match", emoji: "🧩" },
-  { key: "quiz", label: "Quiz", emoji: "❓" },
-  { key: "rewards", label: "Rewards", emoji: "🏆" },
+  { key: "abc",       label: "ABCs",        emoji: "🔤" },
+  { key: "123",       label: "123s",        emoji: "🔢" },
+  { key: "colors",    label: "Colors",      emoji: "🎨" },
+  { key: "shapes",    label: "Shapes",      emoji: "⭐" },
+  { key: "animals",   label: "Animals",     emoji: "🐾" },
+  { key: "story",     label: "Stories",     emoji: "📖" },
+  { key: "spell",     label: "Spell It",    emoji: "✍️" },
+  { key: "wordbuild", label: "Word Build",  emoji: "🧱" },
+  { key: "count",     label: "Counting",    emoji: "🔢" },
+  { key: "rhyme",     label: "Rhyme Time",  emoji: "🎵" },
+  { key: "trace",     label: "Trace",       emoji: "✏️" },
+  { key: "match",     label: "Match",       emoji: "🧩" },
+  { key: "quiz",      label: "Quiz",        emoji: "❓" },
+  { key: "rewards",   label: "Rewards",     emoji: "🏆" },
 ];
 
 export function LearnApp() {
   const [tab, setTab] = useState<TabKey>("abc");
   const stars = useStars();
+  const streak = useStreak();
+  const [difficulty, setDifficulty] = useDifficulty();
+  const level = getCurrentLevel(stars);
+  const nextLevel = getNextLevel(stars);
 
   useEffect(() => {
     const warm = () => {
@@ -39,7 +51,8 @@ export function LearnApp() {
 
   return (
     <div className="min-h-screen px-4 pb-16 pt-6 sm:px-8">
-      <header className="mx-auto mb-8 flex max-w-6xl items-center justify-between gap-3">
+      {/* Header */}
+      <header className="mx-auto mb-4 flex max-w-6xl items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="grid h-12 w-12 place-items-center rounded-2xl bg-pink text-2xl shadow-md">🌈</div>
           <div>
@@ -47,16 +60,57 @@ export function LearnApp() {
             <p className="text-xs text-muted-foreground sm:text-sm">Tap, listen, learn — together.</p>
           </div>
         </div>
-        <button
-          onClick={() => setTab("rewards")}
-          className="card-soft flex items-center gap-2 rounded-full bg-butter px-4 py-2 text-sm font-bold shadow-sm transition hover:scale-105"
-          title="Your rewards"
-        >
-          <span className="text-xl">⭐</span>
-          <span>{stars}</span>
-        </button>
+        <div className="flex items-center gap-2">
+          {streak > 0 && (
+            <div className="card-soft flex items-center gap-1 rounded-full bg-peach px-3 py-2 text-sm font-bold">
+              🔥 {streak} day{streak !== 1 ? "s" : ""}
+            </div>
+          )}
+          <button
+            onClick={() => setTab("rewards")}
+            className="card-soft flex items-center gap-2 rounded-full bg-butter px-4 py-2 text-sm font-bold shadow-sm transition hover:scale-105"
+          >
+            <span className="text-xl">⭐</span>
+            <span>{stars}</span>
+          </button>
+        </div>
       </header>
 
+      {/* Level + progress */}
+      <div className="mx-auto mb-4 max-w-6xl">
+        <div className="card-soft flex items-center gap-4 p-3">
+          <div className="text-2xl">{level.emoji}</div>
+          <div className="flex-1">
+            <div className="mb-1 flex items-center justify-between text-xs font-bold">
+              <span>{level.name}</span>
+              {nextLevel && <span className="text-muted-foreground">{nextLevel.starsNeeded - stars} ⭐ to {nextLevel.name}</span>}
+            </div>
+            {nextLevel && (
+              <ProgressBar
+                current={stars - level.starsNeeded}
+                total={nextLevel.starsNeeded - level.starsNeeded}
+                color="bg-butter"
+              />
+            )}
+          </div>
+          {/* Difficulty */}
+          <div className="flex gap-1">
+            {(["easy", "medium", "hard"] as const).map((d) => (
+              <button
+                key={d}
+                onClick={() => setDifficulty(d)}
+                className={`rounded-lg px-2 py-1 text-xs font-bold transition ${
+                  difficulty === d ? "bg-foreground text-background" : "bg-muted text-foreground/70 hover:bg-muted/70"
+                }`}
+              >
+                {d === "easy" ? "🌱" : d === "medium" ? "⭐" : "🔥"}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Nav */}
       <nav className="mx-auto mb-8 max-w-6xl">
         <div className="card-soft flex flex-wrap gap-2 p-2">
           {TABS.map((t) => {
@@ -65,7 +119,7 @@ export function LearnApp() {
               <button
                 key={t.key}
                 onClick={() => setTab(t.key)}
-                className={`flex-1 min-w-[100px] rounded-xl px-3 py-3 text-sm font-semibold transition-all sm:text-base ${
+                className={`flex-1 min-w-[90px] rounded-xl px-3 py-3 text-sm font-semibold transition-all sm:text-base ${
                   active
                     ? "bg-foreground text-background shadow-md scale-[1.02]"
                     : "hover:bg-muted text-foreground/80"
@@ -79,30 +133,79 @@ export function LearnApp() {
         </div>
       </nav>
 
+      {/* Content */}
       <main className="mx-auto max-w-6xl">
-        {tab === "abc" && <AlphabetGrid />}
-        {tab === "123" && <NumberGrid />}
-        {tab === "colors" && <ColorGrid />}
-        {tab === "shapes" && <ShapeGrid />}
-        {tab === "animals" && <AnimalGrid />}
-        {tab === "story" && <StoryTime />}
-        {tab === "trace" && <TracePanel />}
-        {tab === "match" && <MatchGame />}
-        {tab === "quiz" && <QuizGame />}
-        {tab === "rewards" && <RewardsPanel stars={stars} />}
+        {tab === "abc"       && <AlphabetGrid />}
+        {tab === "123"       && <NumberGrid />}
+        {tab === "colors"    && <ColorGrid />}
+        {tab === "shapes"    && <ShapeGrid />}
+        {tab === "animals"   && <AnimalGrid />}
+        {tab === "story"     && <StoryTime />}
+        {tab === "spell"     && <Section title="Spell It ✍️" subtitle="Hear the word, tap the letters to spell it!"><SpellItGame difficulty={difficulty} /></Section>}
+        {tab === "wordbuild" && <Section title="Word Builder 🧱" subtitle="Tap the letters to build the word!"><WordBuilderGame difficulty={difficulty} /></Section>}
+        {tab === "count"     && <Section title="Counting Game 🔢" subtitle="Count the objects and pick the right number!"><CountingGame difficulty={difficulty} /></Section>}
+        {tab === "rhyme"     && <Section title="Rhyme Time 🎵" subtitle="Find the word that rhymes!"><RhymeTimeGame difficulty={difficulty} /></Section>}
+        {tab === "trace"     && <TracePanel />}
+        {tab === "match"     && <MatchGame />}
+        {tab === "quiz"      && <QuizGame />}
+        {tab === "rewards"   && <RewardsPanel stars={stars} streak={streak} />}
       </main>
     </div>
   );
 }
 
-function RewardsPanel({ stars }: { stars: number }) {
+function RewardsPanel({ stars, streak }: { stars: number; streak: number }) {
   const stickers = earnedStickers(stars);
+  const level = getCurrentLevel(stars);
+  const nextLevel = getNextLevel(stars);
+
   return (
     <Section title="Your Rewards 🏆" subtitle="Earn stars by playing games and reading stories!">
       <div className="card-soft mx-auto max-w-2xl p-8 text-center">
-        <div className="mb-6 inline-flex items-center gap-3 rounded-full bg-butter px-6 py-3 text-2xl font-bold">
+        {/* Streak */}
+        {streak > 0 && (
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-peach px-5 py-2 text-lg font-bold">
+            🔥 {streak} day streak! Keep it up!
+          </div>
+        )}
+
+        {/* Stars */}
+        <div className="mb-4 inline-flex items-center gap-3 rounded-full bg-butter px-6 py-3 text-2xl font-bold">
           ⭐ {stars} stars
         </div>
+
+        {/* Level */}
+        <div className="mb-6">
+          <p className="mb-2 text-lg font-bold">{level.emoji} Level {level.level}: {level.name}</p>
+          {nextLevel && (
+            <div className="mx-auto max-w-xs">
+              <ProgressBar
+                current={stars - level.starsNeeded}
+                total={nextLevel.starsNeeded - level.starsNeeded}
+                color="bg-mint"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">{nextLevel.starsNeeded - stars} more stars to reach {nextLevel.name}!</p>
+            </div>
+          )}
+        </div>
+
+        {/* All levels */}
+        <h3 className="mb-3 font-display text-xl font-bold">Level Journey</h3>
+        <div className="mb-6 flex flex-wrap justify-center gap-2">
+          {LEVELS.map((l) => (
+            <div
+              key={l.level}
+              className={`rounded-2xl px-4 py-2 text-sm font-bold transition ${
+                stars >= l.starsNeeded ? "bg-mint shadow-md" : "bg-muted opacity-50"
+              }`}
+            >
+              {l.emoji} {l.name}
+              <div className="text-xs opacity-70">{l.starsNeeded}⭐</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Sticker book */}
         <h3 className="mb-4 font-display text-2xl font-bold">Sticker Book</h3>
         <div className="grid grid-cols-3 gap-4 sm:grid-cols-6">
           {[5, 15, 30, 50, 75, 100].map((at) => {
@@ -120,31 +223,21 @@ function RewardsPanel({ stars }: { stars: number }) {
             );
           })}
         </div>
-        <p className="mt-6 text-sm text-muted-foreground">
-          {stickers.length} of 6 stickers collected
-        </p>
+        <p className="mt-4 text-sm text-muted-foreground">{stickers.length} of 6 stickers collected</p>
+
+        <div className="mt-6 flex justify-center">
+          <Mascot mood={stickers.length >= 3 ? "cheer" : stars > 0 ? "happy" : "idle"} />
+        </div>
       </div>
     </Section>
   );
 }
 
-function Tile({
-  tone,
-  onClick,
-  children,
-  big,
-}: {
-  tone: Tone;
-  onClick: () => void;
-  children: React.ReactNode;
-  big?: boolean;
-}) {
+function Tile({ tone, onClick, children, big }: { tone: Tone; onClick: () => void; children: React.ReactNode; big?: boolean }) {
   return (
     <button
       onClick={onClick}
-      className={`tile-pop tile-pop-hover card-soft ${toneClass(tone)} relative flex flex-col items-center justify-center gap-2 p-4 text-foreground/90 ${
-        big ? "aspect-square" : "aspect-[4/5]"
-      }`}
+      className={`tile-pop tile-pop-hover card-soft ${toneClass(tone)} relative flex flex-col items-center justify-center gap-2 p-4 text-foreground/90 ${big ? "aspect-square" : "aspect-[4/5]"}`}
     >
       {children}
     </button>
@@ -156,11 +249,7 @@ function AlphabetGrid() {
     <Section title="The Alphabet" subtitle="Tap a letter to hear it and the word.">
       <div className="grid grid-cols-3 gap-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7">
         {ALPHABET.map((a, i) => (
-          <Tile
-            key={a.letter}
-            tone={TONES[i % TONES.length]}
-            onClick={() => speak(`${a.letter}. ${a.letter} is for ${a.word}.`)}
-          >
+          <Tile key={a.letter} tone={TONES[i % TONES.length]} onClick={() => speak(`${a.letter}. ${a.letter} is for ${a.word}.`)}>
             <span className="text-5xl font-bold font-display sm:text-6xl">{a.letter}</span>
             <span className="text-3xl">{a.emoji}</span>
             <span className="text-xs font-semibold sm:text-sm">{a.word}</span>
@@ -176,12 +265,7 @@ function NumberGrid() {
     <Section title="Numbers 1 to 10" subtitle="Count along out loud.">
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
         {NUMBERS.map((n, i) => (
-          <Tile
-            key={n.n}
-            tone={TONES[i % TONES.length]}
-            onClick={() => speak(n.n === 1 ? `One. One star.` : `${n.word}. ${n.n} stars.`)}
-            big
-          >
+          <Tile key={n.n} tone={TONES[i % TONES.length]} onClick={() => speak(n.n === 1 ? `One. One star.` : `${n.word}. ${n.n} stars.`)} big>
             <span className="text-6xl font-bold font-display sm:text-7xl">{n.n}</span>
             <span className="text-lg">{n.emoji}</span>
             <span className="text-sm font-semibold capitalize">{n.word}</span>
@@ -197,17 +281,8 @@ function ColorGrid() {
     <Section title="Colors" subtitle="Tap a color to hear its name.">
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
         {COLORS.map((c) => (
-          <button
-            key={c.name}
-            onClick={() => speak(c.phrase)}
-            className="card-soft tile-pop tile-pop-hover flex flex-col items-center gap-3 p-5"
-          >
-            <div
-              className="grid h-28 w-28 place-items-center rounded-full text-5xl shadow-inner"
-              style={{ backgroundColor: c.hex }}
-            >
-              {c.emoji}
-            </div>
+          <button key={c.name} onClick={() => speak(c.phrase)} className="card-soft tile-pop tile-pop-hover flex flex-col items-center gap-3 p-5">
+            <div className="grid h-28 w-28 place-items-center rounded-full text-5xl shadow-inner" style={{ backgroundColor: c.hex }}>{c.emoji}</div>
             <span className="text-lg font-bold font-display">{c.name}</span>
           </button>
         ))}
@@ -222,9 +297,7 @@ function ShapeGrid() {
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-3">
         {SHAPES.map((s, i) => (
           <Tile key={s.name} tone={TONES[i % TONES.length]} onClick={() => speak(s.name)} big>
-            <svg viewBox="0 0 100 100" className="h-28 w-28 fill-foreground/85">
-              {s.svg}
-            </svg>
+            <svg viewBox="0 0 100 100" className="h-28 w-28 fill-foreground/85">{s.svg}</svg>
             <span className="text-xl font-bold font-display">{s.name}</span>
           </Tile>
         ))}
@@ -243,15 +316,10 @@ function AnimalGrid() {
           const pitch = big ? 0.6 : small ? 1.7 : 1.2;
           const rate = big ? 0.8 : small ? 1.05 : 0.95;
           return (
-            <Tile
-              key={a.name}
-              tone={TONES[i % TONES.length]}
-              onClick={() => speak(`${a.name} says ${a.sound}! ${a.sound}!`, { pitch, rate })}
-              big
-            >
+            <Tile key={a.name} tone={TONES[i % TONES.length]} onClick={() => speak(`${a.name} says ${a.sound}! ${a.sound}!`, { pitch, rate })} big>
               <span className="text-7xl">{a.emoji}</span>
               <span className="text-lg font-bold font-display">{a.name}</span>
-              <span className="text-xs text-foreground/70">says “{a.sound}”</span>
+              <span className="text-xs text-foreground/70">says "{a.sound}"</span>
             </Tile>
           );
         })}
@@ -260,234 +328,86 @@ function AnimalGrid() {
   );
 }
 
-/* ---------- Tracing ---------- */
 function TracePanel() {
   const [letter, setLetter] = useState("A");
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawing = useRef(false);
-
   useEffect(() => { clear(); }, [letter]);
-
   function getPos(e: React.PointerEvent<HTMLCanvasElement>) {
-    const c = canvasRef.current!;
-    const r = c.getBoundingClientRect();
+    const c = canvasRef.current!; const r = c.getBoundingClientRect();
     return { x: ((e.clientX - r.left) / r.width) * c.width, y: ((e.clientY - r.top) / r.height) * c.height };
   }
-  function start(e: React.PointerEvent<HTMLCanvasElement>) {
-    drawing.current = true;
-    const ctx = canvasRef.current!.getContext("2d")!;
-    const { x, y } = getPos(e);
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-  }
-  function move(e: React.PointerEvent<HTMLCanvasElement>) {
-    if (!drawing.current) return;
-    const ctx = canvasRef.current!.getContext("2d")!;
-    const { x, y } = getPos(e);
-    ctx.lineTo(x, y);
-    ctx.lineWidth = 18;
-    ctx.lineCap = "round";
-    ctx.strokeStyle = "#ff6fa0";
-    ctx.stroke();
-  }
+  function start(e: React.PointerEvent<HTMLCanvasElement>) { drawing.current = true; const ctx = canvasRef.current!.getContext("2d")!; const { x, y } = getPos(e); ctx.beginPath(); ctx.moveTo(x, y); }
+  function move(e: React.PointerEvent<HTMLCanvasElement>) { if (!drawing.current) return; const ctx = canvasRef.current!.getContext("2d")!; const { x, y } = getPos(e); ctx.lineTo(x, y); ctx.lineWidth = 18; ctx.lineCap = "round"; ctx.strokeStyle = "#ff6fa0"; ctx.stroke(); }
   function end() { drawing.current = false; }
-  function clear() {
-    const c = canvasRef.current; if (!c) return;
-    const ctx = c.getContext("2d")!;
-    ctx.clearRect(0, 0, c.width, c.height);
-  }
-
+  function clear() { const c = canvasRef.current; if (!c) return; const ctx = c.getContext("2d")!; ctx.clearRect(0, 0, c.width, c.height); }
   return (
     <Section title="Trace a Letter" subtitle="Use your finger or mouse to trace the letter.">
       <div className="card-soft grid gap-6 p-6 md:grid-cols-[1fr_auto]">
         <div className="relative mx-auto aspect-square w-full max-w-md rounded-2xl bg-butter/40">
-          <div className="pointer-events-none absolute inset-0 grid place-items-center font-display text-[18rem] font-bold leading-none text-foreground/15 select-none">
-            {letter}
-          </div>
-          <canvas
-            ref={canvasRef}
-            width={600}
-            height={600}
-            onPointerDown={start}
-            onPointerMove={move}
-            onPointerUp={end}
-            onPointerLeave={end}
-            className="absolute inset-0 h-full w-full touch-none rounded-2xl"
-          />
+          <div className="pointer-events-none absolute inset-0 grid place-items-center font-display text-[18rem] font-bold leading-none text-foreground/15 select-none">{letter}</div>
+          <canvas ref={canvasRef} width={600} height={600} onPointerDown={start} onPointerMove={move} onPointerUp={end} onPointerLeave={end} className="absolute inset-0 h-full w-full touch-none rounded-2xl" />
         </div>
         <div className="flex flex-col gap-3">
           <p className="text-sm font-semibold text-muted-foreground">Choose a letter</p>
           <div className="grid max-h-[28rem] w-full grid-cols-6 gap-1.5 overflow-auto md:w-56 md:grid-cols-4">
             {ALPHABET.map((a) => (
-              <button
-                key={a.letter}
-                onClick={() => { setLetter(a.letter); speak(a.letter); }}
-                className={`rounded-lg py-2 font-display text-lg font-bold transition ${
-                  letter === a.letter ? "bg-pink shadow-md scale-105" : "bg-muted hover:bg-accent"
-                }`}
-              >
-                {a.letter}
-              </button>
+              <button key={a.letter} onClick={() => { setLetter(a.letter); speak(a.letter); }} className={`rounded-lg py-2 font-display text-lg font-bold transition ${letter === a.letter ? "bg-pink shadow-md scale-105" : "bg-muted hover:bg-accent"}`}>{a.letter}</button>
             ))}
           </div>
-          <button onClick={clear} className="card-soft mt-2 rounded-xl bg-sky px-4 py-3 font-bold">
-            ↻ Clear
-          </button>
+          <button onClick={clear} className="card-soft mt-2 rounded-xl bg-sky px-4 py-3 font-bold">↻ Clear</button>
         </div>
       </div>
     </Section>
   );
 }
 
-/* ---------- Match ---------- */
 function MatchGame() {
   const [round, setRound] = useState(0);
   const [picked, setPicked] = useState<string | null>(null);
   const [correct, setCorrect] = useState(false);
-
   const pool = ALPHABET;
   const set = useRef(rollSet());
-  function rollSet() {
-    const items = [...pool].sort(() => Math.random() - 0.5).slice(0, 4);
-    const answer = items[Math.floor(Math.random() * items.length)];
-    return { items, answer };
-  }
-
-  function sayPrompt() {
-    speak(`Find the letter ${set.current.answer.letter}`);
-  }
-
-  function next() {
-    set.current = rollSet();
-    setPicked(null);
-    setCorrect(false);
-    setRound((r) => r + 1);
-  }
-
-  function pick(letter: string) {
-    setPicked(letter);
-    const ok = letter === set.current.answer.letter;
-    setCorrect(ok);
-    if (ok) addStars(1);
-    speak(ok ? "Yay! That's right!" : `Try again. Find ${set.current.answer.letter}.`);
-  }
-
+  function rollSet() { const items = [...pool].sort(() => Math.random() - 0.5).slice(0, 4); const answer = items[Math.floor(Math.random() * items.length)]; return { items, answer }; }
+  function sayPrompt() { speak(`Find the letter ${set.current.answer.letter}`); }
+  function next() { set.current = rollSet(); setPicked(null); setCorrect(false); setRound((r) => r + 1); }
+  function pick(letter: string) { setPicked(letter); const ok = letter === set.current.answer.letter; setCorrect(ok); if (ok) addStars(1); speak(ok ? "Yay! That's right!" : `Try again. Find ${set.current.answer.letter}.`); }
   return (
     <Section title="Matching Game" subtitle="Tap the letter you hear.">
       <div className="card-soft mx-auto max-w-3xl p-6 text-center">
-        <p className="mb-2 text-sm font-semibold text-muted-foreground">Find this letter:</p>
-        <button
-          onClick={sayPrompt}
-          className="mb-6 inline-flex items-center gap-3 rounded-2xl bg-lilac px-6 py-4 font-display text-2xl font-bold shadow-md"
-        >
-          🔊 Listen again
-        </button>
+        <button onClick={sayPrompt} className="mb-6 inline-flex items-center gap-3 rounded-2xl bg-lilac px-6 py-4 font-display text-2xl font-bold shadow-md">🔊 Listen again</button>
         <div key={round} className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          {set.current.items.map((a, i) => {
-            const isPicked = picked === a.letter;
-            const isAnswer = a.letter === set.current.answer.letter;
-            const state = picked
-              ? isAnswer ? "bg-mint" : isPicked ? "bg-destructive/40" : "bg-card opacity-60"
-              : toneClass(TONES[i % TONES.length]);
-            return (
-              <button
-                key={a.letter}
-                onClick={() => !picked && pick(a.letter)}
-                className={`tile-pop tile-pop-hover card-soft aspect-square ${state}`}
-              >
-                <span className="font-display text-6xl font-bold">{a.letter}</span>
-              </button>
-            );
-          })}
+          {set.current.items.map((a, i) => { const isPicked = picked === a.letter; const isAnswer = a.letter === set.current.answer.letter; const state = picked ? isAnswer ? "bg-mint" : isPicked ? "bg-destructive/40" : "bg-card opacity-60" : toneClass(TONES[i % TONES.length]); return (<button key={a.letter} onClick={() => !picked && pick(a.letter)} className={`tile-pop tile-pop-hover card-soft aspect-square ${state}`}><span className="font-display text-6xl font-bold">{a.letter}</span></button>); })}
         </div>
-        {picked && (
-          <div className="mt-6 animate-pop">
-            <p className="mb-3 text-xl font-bold font-display">
-              {correct ? "🎉 Great job!" : "💪 Almost! Try again."}
-            </p>
-            <button onClick={next} className="card-soft rounded-xl bg-pink px-6 py-3 font-bold">
-              Next →
-            </button>
-          </div>
-        )}
+        {picked && (<div className="mt-6 animate-pop"><p className="mb-3 text-xl font-bold font-display">{correct ? "🎉 Great job!" : "💪 Almost! Try again."}</p><button onClick={next} className="card-soft rounded-xl bg-pink px-6 py-3 font-bold">Next →</button></div>)}
       </div>
     </Section>
   );
 }
 
-/* ---------- Quiz ---------- */
 function QuizGame() {
   const [score, setScore] = useState(0);
   const [round, setRound] = useState(0);
   const [picked, setPicked] = useState<string | null>(null);
   const q = useRef(rollQ());
-
-  function rollQ() {
-    const items = [...ALPHABET].sort(() => Math.random() - 0.5).slice(0, 4);
-    const answer = items[Math.floor(Math.random() * items.length)];
-    return { items, answer };
-  }
-
-  function pick(word: string) {
-    if (picked) return;
-    setPicked(word);
-    const ok = word === q.current.answer.word;
-    if (ok) {
-      setScore((s) => s + 1);
-      addStars(1);
-    }
-    speak(ok ? "Correct!" : `The answer is ${q.current.answer.word}`);
-  }
-  function next() {
-    q.current = rollQ();
-    setPicked(null);
-    setRound((r) => r + 1);
-  }
-
+  function rollQ() { const items = [...ALPHABET].sort(() => Math.random() - 0.5).slice(0, 4); const answer = items[Math.floor(Math.random() * items.length)]; return { items, answer }; }
+  function pick(word: string) { if (picked) return; setPicked(word); const ok = word === q.current.answer.word; if (ok) { setScore((s) => s + 1); addStars(1); } speak(ok ? "Correct!" : `The answer is ${q.current.answer.word}`); }
+  function next() { q.current = rollQ(); setPicked(null); setRound((r) => r + 1); }
   const current = q.current;
-
   return (
     <Section title="Letter Quiz" subtitle="Which word starts with this letter?">
       <div className="card-soft mx-auto max-w-3xl p-6 text-center">
-        <div className="mb-4 flex items-center justify-between text-sm font-semibold">
-          <span className="rounded-full bg-mint px-3 py-1">Round {round + 1}</span>
-          <span className="rounded-full bg-butter px-3 py-1">⭐ Score: {score}</span>
-        </div>
-        <div className="mb-6 grid place-items-center">
-          <div className="grid h-36 w-36 place-items-center rounded-3xl bg-pink shadow-md">
-            <span className="font-display text-8xl font-bold">{current.answer.letter}</span>
-          </div>
-        </div>
+        <div className="mb-4 flex items-center justify-between text-sm font-semibold"><span className="rounded-full bg-mint px-3 py-1">Round {round + 1}</span><span className="rounded-full bg-butter px-3 py-1">⭐ Score: {score}</span></div>
+        <div className="mb-6 grid place-items-center"><div className="grid h-36 w-36 place-items-center rounded-3xl bg-pink shadow-md"><span className="font-display text-8xl font-bold">{current.answer.letter}</span></div></div>
         <div key={round} className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {current.items.map((a, i) => {
-            const isPicked = picked === a.word;
-            const isAnswer = a.word === current.answer.word;
-            const state = picked
-              ? isAnswer ? "bg-mint" : isPicked ? "bg-destructive/40" : "bg-card opacity-60"
-              : toneClass(TONES[i % TONES.length]);
-            return (
-              <button
-                key={a.word}
-                onClick={() => pick(a.word)}
-                className={`tile-pop tile-pop-hover card-soft flex flex-col items-center gap-1 p-4 ${state}`}
-              >
-                <span className="text-4xl">{a.emoji}</span>
-                <span className="text-sm font-bold">{a.word}</span>
-              </button>
-            );
-          })}
+          {current.items.map((a, i) => { const isPicked = picked === a.word; const isAnswer = a.word === current.answer.word; const state = picked ? isAnswer ? "bg-mint" : isPicked ? "bg-destructive/40" : "bg-card opacity-60" : toneClass(TONES[i % TONES.length]); return (<button key={a.word} onClick={() => pick(a.word)} className={`tile-pop tile-pop-hover card-soft flex flex-col items-center gap-1 p-4 ${state}`}><span className="text-4xl">{a.emoji}</span><span className="text-sm font-bold">{a.word}</span></button>); })}
         </div>
-        {picked && (
-          <button onClick={next} className="card-soft mt-6 rounded-xl bg-sky px-6 py-3 font-bold animate-pop">
-            Next question →
-          </button>
-        )}
+        {picked && (<button onClick={next} className="card-soft mt-6 rounded-xl bg-sky px-6 py-3 font-bold animate-pop">Next question →</button>)}
       </div>
     </Section>
   );
 }
 
-/* ---------- Shared ---------- */
 function Section({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
   return (
     <section className="animate-pop">
