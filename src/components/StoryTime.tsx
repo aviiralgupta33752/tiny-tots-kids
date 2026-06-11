@@ -77,7 +77,12 @@ function BookReader({ story, onExit }: { story: Story; onExit: () => void }) {
     }, 350);
   }
 
-  useEffect(() => () => stopSpeaking(), []);
+ useEffect(() => {
+  return () => {
+    stopSpeaking();
+    window.speechSynthesis.cancel();
+  };
+}, []);
 
   return (
     <section className="animate-pop">
