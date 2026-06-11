@@ -4,12 +4,12 @@ import { StoryTime } from "@/components/StoryTime";
 import { addStars, earnedStickers, useStars, useStreak, useDifficulty, getCurrentLevel, getNextLevel, LEVELS } from "@/lib/rewards";
 import { prewarm } from "@/lib/speak";
 import { SpellItGame } from "@/components/SpellItGame";
-import { CountingGame, RhymeTimeGame } from "@/components/CountingAndRhymeGames";
+import { CountingGame, RhymeTimeGame, MathGame } from "@/components/CountingAndRhymeGames";
 import { Mascot, ProgressBar } from "@/components/GameUtils";
 import { AvatarDisplay, AvatarPicker, loadAvatar, type AvatarState } from "@/components/AvatarPicker";
-import { playAnimalSound } from "@/lib/animalSounds";
+import { playAnimalSound, stopAllSounds, startBgMusic, stopBgMusic, toggleBgMusic, isBgMusicEnabled } from "@/lib/audioManager";
 
-type TabKey = "abc"|"123"|"colors"|"shapes"|"animals"|"story"|"spell"|"count"|"rhyme"|"trace"|"match"|"quiz"|"rewards";
+type TabKey = "abc"|"123"|"colors"|"shapes"|"animals"|"story"|"spell"|"count"|"math"|"rhyme"|"trace"|"match"|"quiz"|"rewards";
 
 const TABS: { key: TabKey; label: string; emoji: string }[] = [
   { key:"abc",     label:"ABCs",       emoji:"🔤" },
@@ -20,6 +20,7 @@ const TABS: { key: TabKey; label: string; emoji: string }[] = [
   { key:"story",   label:"Stories",    emoji:"📖" },
   { key:"spell",   label:"Spell It",   emoji:"✍️" },
   { key:"count",   label:"Counting",   emoji:"🔢" },
+  { key:"math",    label:"Math",       emoji:"➕" },
   { key:"rhyme",   label:"Rhyme Time", emoji:"🎵" },
   { key:"trace",   label:"Trace",      emoji:"✏️" },
   { key:"match",   label:"Match",      emoji:"🧩" },
@@ -44,6 +45,17 @@ export function LearnApp() {
   const [avatar, setAvatar] = useState<AvatarState>(loadAvatar);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [currTab, setCurrTab] = useState<TabKey>(getCurriculumTab());
+  const [musicOn, setMusicOn] = useState(true);
+
+  function switchTab(t: TabKey) {
+    stopAllSounds();
+    setTab(t);
+  }
+
+  useEffect(() => {
+    startBgMusic();
+    return () => stopBgMusic();
+  }, []);
 
   // Update curriculum tab every 30 min
   useEffect(() => {
@@ -86,11 +98,18 @@ export function LearnApp() {
               🔥 {streak} day{streak !== 1 ? "s" : ""}
             </div>
           )}
+          <button
+            onClick={() => { const on = toggleBgMusic(); setMusicOn(on); }}
+            className="card-soft rounded-full px-3 py-2 text-lg font-bold transition hover:scale-105"
+            title={musicOn ? "Mute music" : "Play music"}
+          >
+            {musicOn ? "🎵" : "🔇"}
+          </button>
           {/* Avatar button */}
           <button onClick={() => setShowAvatarPicker(true)} className="transition hover:scale-110">
             <AvatarDisplay avatar={avatar} size="sm" />
           </button>
-          <button onClick={() => setTab("rewards")}
+          <button onClick={() => switchTab("rewards")}
             className="card-soft flex items-center gap-2 rounded-full bg-butter px-4 py-2 text-sm font-bold shadow-sm transition hover:scale-105">
             <span className="text-xl">⭐</span><span>{stars}</span>
           </button>
@@ -99,7 +118,7 @@ export function LearnApp() {
 
       {/* Curriculum suggestion banner */}
       <div className="mx-auto mb-3 max-w-6xl">
-        <button onClick={() => setTab(currTab)}
+        <button onClick={() => switchTab(currTab)}
           className="w-full rounded-2xl bg-mint/60 px-4 py-2 text-sm font-bold text-left hover:bg-mint transition">
           📚 Now learning: <span className="underline">{TABS.find(t=>t.key===currTab)?.label}</span> — tap to jump there!
         </button>
@@ -131,7 +150,7 @@ export function LearnApp() {
       <nav className="mx-auto mb-8 max-w-6xl">
         <div className="card-soft flex flex-wrap gap-2 p-2">
           {TABS.map((t) => (
-            <button key={t.key} onClick={() => setTab(t.key)}
+            <button key={t.key} onClick={() => switchTab(t.key)}
               className={`flex-1 min-w-[80px] rounded-xl px-3 py-3 text-sm font-semibold transition-all ${
                 tab === t.key ? "bg-foreground text-background shadow-md scale-[1.02]" : "hover:bg-muted text-foreground/80"
               }`}>
@@ -151,6 +170,7 @@ export function LearnApp() {
         {tab === "story"   && <StoryTime />}
         {tab === "spell"   && <Section title="Spell It ✍️" subtitle="Hear the word, tap the letters!"><SpellItGame difficulty={difficulty} /></Section>}
         {tab === "count"   && <Section title="Counting 🔢" subtitle="Count and pick the right number!"><CountingGame difficulty={difficulty} /></Section>}
+        {tab === "math"    && <Section title="Math ➕" subtitle="Solve the math problem!"><MathGame difficulty={difficulty} /></Section>}
         {tab === "rhyme"   && <Section title="Rhyme Time 🎵" subtitle="Find the word that rhymes!"><RhymeTimeGame difficulty={difficulty} /></Section>}
         {tab === "trace"   && <TracePanel />}
         {tab === "match"   && <MatchGame />}
