@@ -1,24 +1,54 @@
-import { useState, useCallback } from "react";
-import { ALPHABET, TONES, toneClass } from "@/lib/learn-data";
+import { useState, useCallback, useRef } from "react";
+import { TONES, toneClass } from "@/lib/learn-data";
 import { speak } from "@/lib/speak";
 import { addStars } from "@/lib/rewards";
 import { Mascot, ProgressBar, useConfetti, Confetti } from "@/components/GameUtils";
 import type { Difficulty } from "@/lib/rewards";
-
-const WORD_POOLS: Record<Difficulty, { letter: string; word: string; emoji: string }[]> = {
-  easy:   ALPHABET.filter((a) => a.word.replace(/\s/g,"").length <= 3),
-  medium: ALPHABET.filter((a) => a.word.replace(/\s/g,"").length <= 5),
-  hard:   ALPHABET,
+ 
+const ALL_WORDS: { word: string; emoji: string }[] = [
+  { word: "CAT",      emoji: "🐱" }, { word: "DOG",      emoji: "🐶" },
+  { word: "SUN",      emoji: "☀️" }, { word: "HAT",      emoji: "🎩" },
+  { word: "CUP",      emoji: "🥤" }, { word: "BUS",      emoji: "🚌" },
+  { word: "ANT",      emoji: "🐜" }, { word: "BEE",      emoji: "🐝" },
+  { word: "EGG",      emoji: "🥚" }, { word: "FAN",      emoji: "🌀" },
+  { word: "GUM",      emoji: "🍬" }, { word: "HEN",      emoji: "🐔" },
+  { word: "JAM",      emoji: "🍓" }, { word: "JET",      emoji: "✈️" },
+  { word: "MAP",      emoji: "🗺️" }, { word: "MOP",      emoji: "🧹" },
+  { word: "NET",      emoji: "🥅" }, { word: "PEN",      emoji: "🖊️" },
+  { word: "PIG",      emoji: "🐷" }, { word: "POT",      emoji: "🍲" },
+  { word: "RAT",      emoji: "🐭" }, { word: "RUG",      emoji: "🟫" },
+  { word: "SAP",      emoji: "🌿" }, { word: "TUB",      emoji: "🛁" },
+  { word: "WEB",      emoji: "🕸️" }, { word: "YAK",      emoji: "🦬" },
+  { word: "ZAP",      emoji: "⚡" }, { word: "FISH",     emoji: "🐟" },
+  { word: "FROG",     emoji: "🐸" }, { word: "DUCK",     emoji: "🦆" },
+  { word: "CAKE",     emoji: "🎂" }, { word: "STAR",     emoji: "⭐" },
+  { word: "BIRD",     emoji: "🐦" }, { word: "RAIN",     emoji: "🌧️" },
+  { word: "MOON",     emoji: "🌙" }, { word: "TREE",     emoji: "🌲" },
+  { word: "BOOK",     emoji: "📚" }, { word: "BALL",     emoji: "⚽" },
+  { word: "MILK",     emoji: "🥛" }, { word: "FROG",     emoji: "🐸" },
+  { word: "TIGER",    emoji: "🐯" }, { word: "APPLE",    emoji: "🍎" },
+  { word: "GRAPE",    emoji: "🍇" }, { word: "CLOUD",    emoji: "☁️" },
+  { word: "HEART",    emoji: "❤️" }, { word: "SNAKE",    emoji: "🐍" },
+  { word: "TRAIN",    emoji: "🚂" }, { word: "BREAD",    emoji: "🍞" },
+  { word: "CLOCK",    emoji: "🕐" }, { word: "DRESS",    emoji: "👗" },
+  { word: "FLAME",    emoji: "🔥" }, { word: "GRASS",    emoji: "🌿" },
+  { word: "HONEY",    emoji: "🍯" }, { word: "JUICE",    emoji: "🧃" },
+  { word: "KNIFE",    emoji: "🔪" }, { word: "LEMON",    emoji: "🍋" },
+  { word: "MOUSE",    emoji: "🐭" }, { word: "NIGHT",    emoji: "🌙" },
+  { word: "OCEAN",    emoji: "🌊" }, { word: "PIANO",    emoji: "🎹" },
+  { word: "QUEEN",    emoji: "👑" }, { word: "ROBOT",    emoji: "🤖" },
+];
+ 
+const WORD_POOLS: Record<Difficulty, { word: string; emoji: string }[]> = {
+  easy:   ALL_WORDS.filter((w) => w.word.length <= 3),
+  medium: ALL_WORDS.filter((w) => w.word.length <= 5),
+  hard:   ALL_WORDS,
 };
-
+ 
 function shuffle<T>(arr: T[]): T[] {
   return [...arr].sort(() => Math.random() - 0.5);
 }
-
-function pickRandom<T>(arr: T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
-
+ 
 function makeChoices(word: string, difficulty: Difficulty): string[] {
   const letters = new Set(word.split(""));
   const extras = shuffle(
@@ -26,31 +56,38 @@ function makeChoices(word: string, difficulty: Difficulty): string[] {
   ).slice(0, difficulty === "easy" ? 2 : difficulty === "medium" ? 4 : 6);
   return shuffle([...word.split(""), ...extras]);
 }
-
+ 
 interface RoundState {
-  target: { letter: string; word: string; emoji: string };
+  target: { word: string; emoji: string };
   word: string;
   choices: string[];
 }
-
-function newRound(difficulty: Difficulty): RoundState {
-  const pool = WORD_POOLS[difficulty].length > 0 ? WORD_POOLS[difficulty] : ALPHABET;
-  const target = pickRandom(pool);
-  const word = target.word.toUpperCase().replace(/\s/g, "");
-  return { target, word, choices: makeChoices(word, difficulty) };
-}
-
+ 
 export function SpellItGame({ difficulty }: { difficulty: Difficulty }) {
-  const [round, setRound] = useState<RoundState>(() => newRound(difficulty));
+  const pool = useRef(shuffle(WORD_POOLS[difficulty].length > 0 ? WORD_POOLS[difficulty] : ALL_WORDS));
+  const indexRef = useRef(0);
+ 
+  function getNextWord(): RoundState {
+    // cycle through shuffled pool, reshuffle when exhausted
+    if (indexRef.current >= pool.current.length) {
+      pool.current = shuffle(pool.current);
+      indexRef.current = 0;
+    }
+    const target = pool.current[indexRef.current++];
+    const word = target.word.toUpperCase();
+    return { target, word, choices: makeChoices(word, difficulty) };
+  }
+ 
+  const [round, setRound] = useState<RoundState>(() => getNextWord());
   const [score, setScore] = useState(0);
   const [typed, setTyped] = useState<string[]>([]);
   const [result, setResult] = useState<"correct" | "wrong" | null>(null);
   const { active: confetti, fire } = useConfetti();
-
+ 
   const playWord = useCallback(() => {
-    speak(`Spell the word: ${round.target.word}`);
+    speak(`Spell the word: ${round.target.word.toLowerCase()}`);
   }, [round.target.word]);
-
+ 
   function tap(letter: string) {
     if (result) return;
     const next = [...typed, letter];
@@ -64,19 +101,19 @@ export function SpellItGame({ difficulty }: { difficulty: Difficulty }) {
         setScore((s) => s + 1);
         speak("Amazing! You spelled it!");
       } else {
-        speak(`Not quite! The word is ${round.target.word}`);
+        speak(`Not quite! The word is ${round.target.word.toLowerCase()}`);
       }
     }
   }
-
+ 
   function next() {
-    const r = newRound(difficulty);
+    const r = getNextWord();
     setRound(r);
     setTyped([]);
     setResult(null);
-    setTimeout(() => speak(`Spell the word: ${r.target.word}`), 300);
+    setTimeout(() => speak(`Spell the word: ${r.target.word.toLowerCase()}`), 300);
   }
-
+ 
   return (
     <div className="card-soft mx-auto max-w-2xl p-6 text-center">
       <Confetti active={confetti} />
@@ -88,7 +125,6 @@ export function SpellItGame({ difficulty }: { difficulty: Difficulty }) {
       <button onClick={playWord} className="mb-4 rounded-2xl bg-lilac px-6 py-3 font-bold text-lg shadow">
         🔊 Hear the word
       </button>
-      {/* Typed slots */}
       <div className="mb-4 flex justify-center gap-2">
         {round.word.split("").map((_, i) => (
           <div key={i} className={`flex h-12 w-12 items-center justify-center rounded-xl border-2 text-xl font-bold transition-all ${
@@ -98,7 +134,6 @@ export function SpellItGame({ difficulty }: { difficulty: Difficulty }) {
           </div>
         ))}
       </div>
-      {/* Letter choices */}
       {!result && (
         <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
           {round.choices.map((l, i) => (
@@ -123,3 +158,4 @@ export function SpellItGame({ difficulty }: { difficulty: Difficulty }) {
     </div>
   );
 }
+ 
