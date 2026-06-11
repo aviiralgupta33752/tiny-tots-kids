@@ -11,16 +11,22 @@ export const ANIMAL_SOUNDS: Record<string, string> = {
   "Frog":    "/frog.mp3",
   "Rooster": "/rooster.mp3",
 };
-
+ 
 let currentAudio: HTMLAudioElement | null = null;
-
+ 
 export function playAnimalSound(name: string): void {
   const url = ANIMAL_SOUNDS[name];
   if (!url) return;
-  if (currentAudio) { currentAudio.pause(); currentAudio.currentTime = 0; }
-  currentAudio = new Audio(url);
-  currentAudio.volume = 1;
-  currentAudio.play().catch(() => {
-    import("@/lib/speak").then(({ speak }) => speak(`${name}`));
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.currentTime = 0;
+    currentAudio = null;
+  }
+  const audio = new Audio(url);
+  audio.volume = 1;
+  currentAudio = audio;
+  audio.play().catch(() => {
+    import("@/lib/speak").then(({ speak }) => speak(name));
   });
 }
+ 
