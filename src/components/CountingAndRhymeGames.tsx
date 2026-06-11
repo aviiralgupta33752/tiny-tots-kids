@@ -1,96 +1,130 @@
 import { useState, useRef } from "react";
 import { speak } from "@/lib/speak";
 import { addStars } from "@/lib/rewards";
-import { Mascot, ProgressBar, useConfetti, Confetti } from "@/components/GameUtils";
 import type { Difficulty } from "@/lib/rewards";
  
 // ── Counting Game ─────────────────────────────────────────────────────────────
 const OBJECTS = ["🍎","⭐","🐶","🌸","🦋","🍪","🚂","🎈","🐱","🦄","🍕","🌈","🎸","🏀","🐠","🌺","🍦","🚀","🦁","🐬"];
  
-function randomCount(difficulty: Difficulty): number {
-  if (difficulty === "easy") return Math.floor(Math.random() * 5) + 1;
-  if (difficulty === "medium") return Math.floor(Math.random() * 8) + 3;
-  return Math.floor(Math.random() * 10) + 1;
+function getRandom(min: number, max: number) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 }
  
-function makeOptions(correct: number): number[] {
-  const set = new Set<number>([correct]);
-  const candidates = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15].filter(n => n !== correct);
-  const shuffled = candidates.sort(() => Math.random() - 0.5);
-  for (const n of shuffled) {
-    if (set.size >= 4) break;
-    set.add(n);
-  }
-  return [...set].sort(() => Math.random() - 0.5);
+function getCount(difficulty: Difficulty): number {
+  if (difficulty === "easy") return getRandom(1, 5);
+  if (difficulty === "medium") return getRandom(3, 10);
+  return getRandom(1, 15);
 }
  
-interface CountRound { obj: string; count: number; options: number[]; }
- 
-function newCountRound(difficulty: Difficulty, usedObjs: Set<string>): CountRound {
-  if (usedObjs.size >= OBJECTS.length) usedObjs.clear();
-  const available = OBJECTS.filter(o => !usedObjs.has(o));
-  const obj = available[Math.floor(Math.random() * available.length)];
-  usedObjs.add(obj);
-  const count = randomCount(difficulty);
-  return { obj, count, options: makeOptions(count) };
+function getOptions(correct: number): number[] {
+  const all = Array.from({ length: 15 }, (_, i) => i + 1).filter(n => n !== correct);
+  const shuffled = all.sort(() => Math.random() - 0.5).slice(0, 3);
+  return [correct, ...shuffled].sort(() => Math.random() - 0.5);
 }
  
 export function CountingGame({ difficulty }: { difficulty: Difficulty }) {
-  const usedObjs = useRef(new Set<string>());
-  const [round, setRound] = useState<CountRound>(() => newCountRound(difficulty, usedObjs.current));
-  const [score, setScore] = useState(0);
+  const objIndex = useRef(0);
+  const shuffledObjs = useRef([...OBJECTS].sort(() => Math.random() - 0.5));
+ 
+  const [count, setCount] = useState(() => getCount(difficulty));
+  const [obj, setObj] = useState(() => shuffledObjs.current[0]);
+  const [options, setOptions] = useState(() => getOptions(getCount(difficulty)));
   const [picked, setPicked] = useState<number | null>(null);
-  const { active: confetti, fire } = useConfetti();
+  const [score, setScore] = useState(0);
+  const [correct, setCorrect] = useState<boolean | null>(null);
+ 
+  // fix options to match count on mount
+  useRef((() => {
+    const c = getCount(difficulty);
+    setCount(c);
+    setOptions(getOptions(c));
+  })());
  
   function pick(n: number) {
     if (picked !== null) return;
     setPicked(n);
-    if (n === round.count) {
-      fire();
+    const ok = n === count;
+    setCorrect(ok);
+    if (ok) {
       addStars(difficulty === "easy" ? 1 : difficulty === "medium" ? 2 : 3);
       setScore(s => s + 1);
-      speak(`Yes! ${round.count}!`);
+      speak(`Yes! ${count}!`);
     } else {
-      speak(`The answer is ${round.count}`);
+      speak(`The answer is ${count}`);
     }
   }
  
   function next() {
-    const r = newCountRound(difficulty, usedObjs.current);
-    setRound(r);
+    objIndex.current = (objIndex.current + 1) % shuffledObjs.current.length;
+    if (objIndex.current === 0) {
+      shuffledObjs.current = [...OBJECTS].sort(() => Math.random() - 0.5);
+    }
+    const newCount = getCount(difficulty);
+    setObj(shuffledObjs.current[objIndex.current]);
+    setCount(newCount);
+    setOptions(getOptions(newCount));
     setPicked(null);
-    setTimeout(() => speak("How many do you see?"), 300);
+    setCorrect(null);
+    
   }
  
   return (
     <div className="card-soft mx-auto max-w-2xl p-6 text-center">
-      <Confetti active={confetti} />
-      <div className="mb-4"><ProgressBar current={score} total={10} color="bg-butter" /></div>
-      <div className="mb-4 flex justify-center">
-        <Mascot mood={picked === null ? "thinking" : picked === round.count ? "cheer" : "sad"} />
-      </div>
-      <p className="mb-3 text-lg font-bold">How many do you see?</p>
-      <div className="mb-6 flex flex-wrap justify-center gap-1 rounded-2xl bg-muted/30 p-4 min-h-[80px]">
-        {Array.from({ length: round.count }).map((_, i) => (
-          <span key={i} className="text-4xl leading-tight">{round.obj}</span>
+      <div className="mb-3 text-right text-sm font-bold">⭐ Score: {score}</div>
+ 
+      <p className="mb-3 text-xl font-bold">How many do you see?</p>
+ 
+      <div className="mb-6 flex flex-wrap justify-center gap-1 rounded-2xl bg-muted/30 p-4" style={{ minHeight: 80 }}>
+        {Array.from({ length: count }).map((_, i) => (
+          <span key={i} style={{ fontSize: 36 }}>{obj}</span>
         ))}
       </div>
-      <div className="grid grid-cols-4 gap-3">
-        {round.options.map((n) => (
-          <button key={n} onClick={() => pick(n)} disabled={picked !== null}
-            className={`card-soft rounded-2xl py-4 font-display text-3xl font-bold transition-all ${
-              picked !== null
-                ? n === round.count ? "bg-mint scale-110 shadow-md"
-                : n === picked ? "bg-destructive/30"
-                : "opacity-50"
-                : "bg-sky hover:scale-105 active:scale-95"
-            }`}>
+ 
+      <div className="grid grid-cols-4 gap-3 mb-4">
+        {options.map((n) => (
+          <button
+            key={n}
+            onClick={() => pick(n)}
+            disabled={picked !== null}
+            style={{
+              fontSize: 28,
+              fontWeight: "bold",
+              padding: "1rem",
+              borderRadius: 16,
+              border: "none",
+              cursor: picked !== null ? "default" : "pointer",
+              background:
+                picked !== null
+                  ? n === count ? "#b5ead7"
+                  : n === picked ? "#ffb3c1"
+                  : "#e5e5e5"
+                  : "#a0c4ff",
+              opacity: picked !== null && n !== count && n !== picked ? 0.5 : 1,
+              transform: picked !== null && n === count ? "scale(1.1)" : "scale(1)",
+              transition: "all 0.2s",
+            }}
+          >
             {n}
           </button>
         ))}
       </div>
-      {picked !== null && (
-        <button onClick={next} className="mt-5 card-soft rounded-xl bg-pink px-6 py-3 font-bold">Next →</button>
+ 
+      {correct !== null && (
+        <div>
+          <p style={{ fontSize: 22, fontWeight: "bold", marginBottom: 12 }}>
+            {correct ? "🎉 Correct!" : `The answer was ${count}`}
+          </p>
+          <button
+            onClick={next}
+            style={{
+              background: "#ff8fab", color: "white", border: "none",
+              borderRadius: 16, padding: "0.75rem 2rem",
+              fontSize: 18, fontWeight: "bold", cursor: "pointer",
+            }}
+          >
+            Next →
+          </button>
+        </div>
       )}
     </div>
   );
@@ -114,46 +148,43 @@ const RHYMES: { word: string; emoji: string; rhymes: string[]; fakes: string[] }
  
 function shuffle<T>(arr: T[]): T[] { return [...arr].sort(() => Math.random() - 0.5); }
  
-interface RhymeRound { entry: typeof RHYMES[0]; options: { word: string; correct: boolean }[]; }
- 
-function newRhymeRound(pool: typeof RHYMES, used: Set<string>): RhymeRound {
-  if (used.size >= pool.length) used.clear();
-  const available = pool.filter(r => !used.has(r.word));
-  const entry = available[Math.floor(Math.random() * available.length)];
-  used.add(entry.word);
-  const correct = shuffle(entry.rhymes).slice(0, 2).map(w => ({ word: w, correct: true }));
-  const wrong   = shuffle(entry.fakes).slice(0, 2).map(w => ({ word: w, correct: false }));
-  return { entry, options: shuffle([...correct, ...wrong]) };
-}
- 
 export function RhymeTimeGame({ difficulty }: { difficulty: Difficulty }) {
   const pool = difficulty === "easy" ? RHYMES.slice(0, 6) : RHYMES;
   const usedWords = useRef(new Set<string>());
-  const [round, setRound] = useState<RhymeRound>(() => newRhymeRound(pool, usedWords.current));
-  const [score, setScore] = useState(0);
-  const [picked, setPicked] = useState<string | null>(null);
-  const { active: confetti, fire } = useConfetti();
  
-  function sayWord() {
-    speak(round.entry.word.toLowerCase());
-    setTimeout(() => speak(`Which word rhymes with ${round.entry.word.toLowerCase()}?`), 900);
+  function getNext() {
+    if (usedWords.current.size >= pool.length) usedWords.current.clear();
+    const available = pool.filter(r => !usedWords.current.has(r.word));
+    const entry = available[Math.floor(Math.random() * available.length)];
+    usedWords.current.add(entry.word);
+    const correct = shuffle(entry.rhymes).slice(0, 2).map(w => ({ word: w, correct: true }));
+    const wrong   = shuffle(entry.fakes).slice(0, 2).map(w => ({ word: w, correct: false }));
+    return { entry, options: shuffle([...correct, ...wrong]) };
   }
  
-  function pick(word: string, correct: boolean) {
+  const [{ entry, options }, setRound] = useState(() => getNext());
+  const [score, setScore] = useState(0);
+  const [picked, setPicked] = useState<string | null>(null);
+ 
+  function sayWord() {
+    speak(entry.word.toLowerCase());
+    setTimeout(() => speak(`Which word rhymes with ${entry.word.toLowerCase()}?`), 900);
+  }
+ 
+  function pick(word: string, isCorrect: boolean) {
     if (picked) return;
     setPicked(word);
-    if (correct) {
-      fire();
+    if (isCorrect) {
       addStars(difficulty === "easy" ? 1 : difficulty === "medium" ? 2 : 3);
       setScore(s => s + 1);
-      speak(`Yes! ${round.entry.word.toLowerCase()} and ${word.toLowerCase()} rhyme!`);
+      speak(`Yes! ${entry.word.toLowerCase()} and ${word.toLowerCase()} rhyme!`);
     } else {
       speak("Not quite! Try again next time.");
     }
   }
  
   function next() {
-    const r = newRhymeRound(pool, usedWords.current);
+    const r = getNext();
     setRound(r);
     setPicked(null);
     setTimeout(() => {
@@ -164,18 +195,14 @@ export function RhymeTimeGame({ difficulty }: { difficulty: Difficulty }) {
  
   return (
     <div className="card-soft mx-auto max-w-2xl p-6 text-center">
-      <Confetti active={confetti} />
-      <div className="mb-4"><ProgressBar current={score} total={8} color="bg-lilac" /></div>
-      <div className="mb-4 flex justify-center">
-        <Mascot mood={picked === null ? "idle" : round.options.find(o => o.word === picked)?.correct ? "cheer" : "sad"} />
-      </div>
+      <div className="mb-3 text-right text-sm font-bold">⭐ Score: {score}</div>
       <p className="mb-2 text-sm font-semibold text-muted-foreground">Which word rhymes with:</p>
       <button onClick={sayWord}
         className="mb-6 inline-flex items-center gap-3 rounded-2xl bg-pink px-6 py-4 font-display text-3xl font-bold shadow-md hover:scale-105 transition">
-        {round.entry.emoji} {round.entry.word} 🔊
+        {entry.emoji} {entry.word} 🔊
       </button>
       <div className="grid grid-cols-2 gap-4">
-        {round.options.map((opt) => (
+        {options.map((opt) => (
           <button key={opt.word} onClick={() => pick(opt.word, opt.correct)} disabled={!!picked}
             className={`card-soft rounded-2xl py-5 font-display text-2xl font-bold transition-all ${
               picked
