@@ -47,8 +47,11 @@ export function LearnApp() {
   const [currTab, setCurrTab] = useState<TabKey>(getCurriculumTab());
   const [musicOn, setMusicOn] = useState(true);
 
-  function switchTab(t: TabKey) {
+ function switchTab(t: TabKey) {
     stopAllSounds();
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
     setTab(t);
   }
 
