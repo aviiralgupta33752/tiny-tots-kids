@@ -1,41 +1,36 @@
 type SpeakOptions = { pitch?: number; rate?: number };
 
 let voicesLoaded = false;
+let currentUtterance: SpeechSynthesisUtterance | null = null;
+let cancelled = false;
 
 function loadVoices(): Promise<void> {
   return new Promise((resolve) => {
     const voices = window.speechSynthesis.getVoices();
-    if (voices.length > 0) {
-      voicesLoaded = true;
-      resolve();
-      return;
-    }
-    window.speechSynthesis.onvoiceschanged = () => {
-      voicesLoaded = true;
-      resolve();
-    };
+    if (voices.length > 0) { voicesLoaded = true; resolve(); return; }
+    window.speechSynthesis.onvoiceschanged = () => { voicesLoaded = true; resolve(); };
     setTimeout(resolve, 1000);
   });
 }
 
 function getBestVoice(): SpeechSynthesisVoice | null {
   const voices = window.speechSynthesis.getVoices();
-  const preferredNames = ["Samantha", "Karen", "Moira", "Tessa", "Victoria", "Aria", "Jenny", "Emma", "Zira"];
-  for (const name of preferredNames) {
-    const match = voices.find((v) => v.name.includes(name) && v.lang.startsWith("en"));
+  const preferred = ["Samantha","Karen","Moira","Tessa","Victoria","Aria","Jenny","Emma","Zira"];
+  for (const name of preferred) {
+    const match = voices.find(v => v.name.includes(name) && v.lang.startsWith("en"));
     if (match) return match;
   }
-  return (
-    voices.find((v) => v.lang.startsWith("en-US") && v.localService) ??
-    voices.find((v) => v.lang.startsWith("en")) ??
-    voices[0] ??
-    null
-  );
+  return voices.find(v => v.lang.startsWith("en-US") && v.localService)
+    ?? voices.find(v => v.lang.startsWith("en"))
+    ?? voices[0] ?? null;
 }
 
 export function stopSpeaking() {
-  if (typeof window === "undefined") return;
-  window.speechSynthesis.cancel();
+  cancelled = true;
+  currentUtterance = null;
+  if (typeof window !== "undefined" && "speechSynthesis" in window) {
+    window.speechSynthesis.cancel();
+  }
 }
 
 async function playUtterance(
@@ -46,35 +41,38 @@ async function playUtterance(
   if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
 
   window.speechSynthesis.cancel();
+  cancelled = false;
 
   if (!voicesLoaded) await loadVoices();
+  if (cancelled) return;
 
   return new Promise((resolve) => {
-    const utter = new SpeechSynthesisUtterance(text);
+    if (cancelled) { resolve(); return; }
 
-    // Slow, warm, gentle — not scary for kids
+    const utter = new SpeechSynthesisUtterance(text);
     utter.pitch = opts?.pitch ?? 1.2;
-    utter.rate = opts?.rate ?? 0.65;  // nice and slow
+    utter.rate  = opts?.rate  ?? 0.65;
     utter.volume = 1;
 
     const voice = getBestVoice();
     if (voice) utter.voice = voice;
 
+    currentUtterance = utter;
+
     if (onWord) {
       const words = text.split(/\s+/).filter(Boolean);
       let idx = 0;
       utter.onboundary = (e) => {
+        if (cancelled) return;
         if (e.name === "word" && idx < words.length) onWord(idx++);
       };
     }
 
-    utter.onend = () => resolve();
-    utter.onerror = (e) => {
-      console.warn("Speech error:", e.error);
-      resolve();
-    };
+    utter.onend = () => { currentUtterance = null; resolve(); };
+    utter.onerror = () => { currentUtterance = null; resolve(); };
 
-    window.speechSynthesis.speak(utter);
+    if (!cancelled) window.speechSynthesis.speak(utter);
+    else resolve();
   });
 }
 
