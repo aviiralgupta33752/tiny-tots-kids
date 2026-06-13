@@ -85,8 +85,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary" },
       { name: "twitter:title", content: "Tiny Tots ABC — Learn Letters, Numbers & More" },
       { name: "twitter:description", content: "A gentle, playful learning app for kids: alphabet, numbers, colors, shapes, animal sounds, tracing, matching and quiz." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/4c36b7ca-2d35-49b7-829a-2379620b0a77/id-preview-76797437--2d5fa70a-7054-4a1c-aece-9ce8345beedc.lovable.app-1780978843313.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/4c36b7ca-2d35-49b7-829a-2379620b0a77/id-preview-76797437--2d5fa70a-7054-4a1c-aece-9ce8345beedc.lovable.app-1780978843313.png" },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/029581ab-1560-4f6f-a02c-6d653254aac1" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/029581ab-1560-4f6f-a02c-6d653254aac1" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
