@@ -7,9 +7,10 @@ import { SpellItGame } from "@/components/SpellItGame";
 import { CountingGame, RhymeTimeGame, MathGame } from "@/components/CountingAndRhymeGames";
 import { Mascot, ProgressBar } from "@/components/GameUtils";
 import { AvatarDisplay, AvatarPicker, loadAvatar, type AvatarState } from "@/components/AvatarPicker";
+import { ColoringPage } from "@/components/ColoringPage";
 import { playAnimalSound, stopAllSounds, startBgMusic, stopBgMusic, toggleBgMusic, isBgMusicEnabled } from "@/lib/audioManager";
 
-type TabKey = "abc"|"123"|"colors"|"shapes"|"animals"|"story"|"spell"|"count"|"math"|"rhyme"|"trace"|"match"|"quiz"|"rewards";
+type TabKey = "abc"|"123"|"colors"|"shapes"|"animals"|"story"|"spell"|"count"|"math"|"rhyme"|"trace"|"match"|"quiz"|"color"|"rewards";
 
 const TABS: { key: TabKey; label: string; emoji: string }[] = [
   { key:"abc",     label:"ABCs",       emoji:"🔤" },
@@ -25,6 +26,7 @@ const TABS: { key: TabKey; label: string; emoji: string }[] = [
   { key:"trace",   label:"Trace",      emoji:"✏️" },
   { key:"match",   label:"Match",      emoji:"🧩" },
   { key:"quiz",    label:"Quiz",       emoji:"❓" },
+  { key:"color",   label:"Color!",     emoji:"🎨" },
   { key:"rewards", label:"Rewards",    emoji:"🏆" },
 ];
 
@@ -46,12 +48,38 @@ export function LearnApp() {
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [currTab, setCurrTab] = useState<TabKey>(getCurriculumTab());
   const [musicOn, setMusicOn] = useState(true);
+  const [focusMode, setFocusMode] = useState(false);
+  const [focusTab, setFocusTab] = useState<TabKey>("abc");
+  const [focusTimeLeft, setFocusTimeLeft] = useState(0);
+  const focusTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
- function switchTab(t: TabKey) {
+  function startFocusMode(t: TabKey) {
+    setFocusTab(t);
+    setFocusMode(true);
+    setFocusTimeLeft(30 * 60);
+    switchTab(t);
+    if (focusTimer.current) clearInterval(focusTimer.current);
+    focusTimer.current = setInterval(() => {
+      setFocusTimeLeft(s => {
+        if (s <= 1) {
+          setFocusMode(false);
+          if (focusTimer.current) clearInterval(focusTimer.current);
+          return 0;
+        }
+        return s - 1;
+      });
+    }, 1000);
+  }
+
+  function exitFocus() {
+    setFocusMode(false);
+    if (focusTimer.current) clearInterval(focusTimer.current);
+  }
+
+  useEffect(() => () => { if (focusTimer.current) clearInterval(focusTimer.current); }, []);
+
+  function switchTab(t: TabKey) {
     stopAllSounds();
-    if (typeof window !== "undefined" && "speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
-    }
     setTab(t);
   }
 
@@ -69,7 +97,7 @@ export function LearnApp() {
   useEffect(() => {
     const warm = () => {
       prewarm([
-        ...ALPHABET.map((a) => `${a.letter}. ${a.letter} is for ${a.word}.`),
+        ...ALPHABET.map((a) => `${a.letter} is for ${a.word}.`),
         ...NUMBERS.map((n) => n.n === 1 ? "One. One star." : `${n.word}. ${n.n} stars.`),
         ...COLORS.map((c) => c.phrase),
       ]);
@@ -121,10 +149,25 @@ export function LearnApp() {
 
       {/* Curriculum suggestion banner */}
       <div className="mx-auto mb-3 max-w-6xl">
-        <button onClick={() => switchTab(currTab)}
-          className="w-full rounded-2xl bg-mint/60 px-4 py-2 text-sm font-bold text-left hover:bg-mint transition">
-          📚 Now learning: <span className="underline">{TABS.find(t=>t.key===currTab)?.label}</span> — tap to jump there!
-        </button>
+        {focusMode ? (
+          <div className="flex items-center justify-between rounded-2xl bg-lilac/60 px-4 py-2">
+            <span className="text-sm font-bold">
+              🎯 Focus mode: {TABS.find(t=>t.key===focusTab)?.label} — {Math.floor(focusTimeLeft/60)}:{String(focusTimeLeft%60).padStart(2,"0")} left
+            </span>
+            <button onClick={exitFocus} className="rounded-xl bg-white/80 px-3 py-1 text-xs font-bold">
+              Exit focus
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between rounded-2xl bg-mint/60 px-4 py-2">
+            <span className="text-sm font-bold">
+              📚 Now learning: <span className="underline">{TABS.find(t=>t.key===currTab)?.label}</span>
+            </span>
+            <button onClick={() => startFocusMode(currTab)} className="rounded-xl bg-white/80 px-3 py-1 text-xs font-bold">
+              🎯 Focus mode
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Level + progress */}
@@ -178,6 +221,7 @@ export function LearnApp() {
         {tab === "trace"   && <TracePanel />}
         {tab === "match"   && <MatchGame />}
         {tab === "quiz"    && <QuizGame />}
+        {tab === "color"   && <Section title="Free Time 🎨" subtitle="Color, draw, and have fun!"><ColoringPage /></Section>}
         {tab === "rewards" && <RewardsPanel stars={stars} streak={streak} avatar={avatar} onEditAvatar={() => setShowAvatarPicker(true)} />}
       </main>
     </div>
@@ -246,7 +290,7 @@ function AlphabetGrid() {
     <Section title="The Alphabet" subtitle="Tap a letter to hear it!">
       <div className="grid grid-cols-3 gap-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7">
         {ALPHABET.map((a, i) => (
-          <Tile key={a.letter} tone={TONES[i % TONES.length]} onClick={() => speak(`${a.letter}. ${a.letter} is for ${a.word}.`)}>
+          <Tile key={a.letter} tone={TONES[i % TONES.length]} onClick={() => speak(`${a.letter} is for ${a.word}.`)}>
             <span className="text-5xl font-bold font-display sm:text-6xl">{a.letter}</span>
             <span className="text-3xl">{a.emoji}</span>
             <span className="text-xs font-semibold sm:text-sm">{a.word}</span>
@@ -326,12 +370,15 @@ function AnimalGrid() {
 // ── Trace Panel ───────────────────────────────────────────────────────────────
 function TracePanel() {
   const [letter, setLetter] = useState("A");
+  const [isLower, setIsLower] = useState(false);
   const [earned, setEarned] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawing = useRef(false);
   const strokes = useRef(0);
 
-  useEffect(() => { clear(); setEarned(false); strokes.current = 0; }, [letter]);
+  const displayLetter = isLower ? letter.toLowerCase() : letter;
+
+  useEffect(() => { clear(); setEarned(false); strokes.current = 0; }, [letter, isLower]);
 
   function getPos(e: React.PointerEvent<HTMLCanvasElement>) {
     const c = canvasRef.current!; const r = c.getBoundingClientRect();
@@ -368,28 +415,64 @@ function TracePanel() {
   return (
     <Section title="Trace a Letter" subtitle="Use your finger or mouse to trace!">
       <div className="card-soft grid gap-6 p-6 md:grid-cols-[1fr_auto]">
-        <div className="relative mx-auto aspect-square w-full max-w-md rounded-2xl bg-butter/40">
-          <div className="pointer-events-none absolute inset-0 grid place-items-center font-display text-[18rem] font-bold leading-none text-foreground/15 select-none">{letter}</div>
-          <canvas ref={canvasRef} width={600} height={600}
-            onPointerDown={start} onPointerMove={move} onPointerUp={end} onPointerLeave={end}
-            className="absolute inset-0 h-full w-full touch-none rounded-2xl" />
-          {earned && (
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-              <div className="animate-bounce rounded-full bg-mint/90 px-6 py-3 text-2xl font-bold shadow-xl">⭐ Great job!</div>
-            </div>
-          )}
+        <div>
+          {/* Uppercase / Lowercase toggle */}
+          <div className="mb-3 flex justify-center gap-2">
+            <button
+              onClick={() => setIsLower(false)}
+              className={`rounded-xl px-5 py-2 font-bold text-lg transition ${!isLower ? "bg-pink text-white shadow-md" : "bg-muted"}`}
+            >
+              ABC Uppercase
+            </button>
+            <button
+              onClick={() => setIsLower(true)}
+              className={`rounded-xl px-5 py-2 font-bold text-lg transition ${isLower ? "bg-sky text-white shadow-md" : "bg-muted"}`}
+            >
+              abc Lowercase
+            </button>
+          </div>
+
+          <div className="relative mx-auto aspect-square w-full max-w-md rounded-2xl bg-butter/40">
+            <div className="pointer-events-none absolute inset-0 grid place-items-center font-display text-[18rem] font-bold leading-none text-foreground/15 select-none">{displayLetter}</div>
+            <canvas ref={canvasRef} width={600} height={600}
+              onPointerDown={start} onPointerMove={move} onPointerUp={end} onPointerLeave={end}
+              className="absolute inset-0 h-full w-full touch-none rounded-2xl" />
+            {earned && (
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <div className="animate-bounce rounded-full bg-mint/90 px-6 py-3 text-2xl font-bold shadow-xl">⭐ Great tracing!</div>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-3 flex justify-center gap-3">
+            <button onClick={clear} className="rounded-xl bg-muted px-5 py-2 font-bold">↻ Clear</button>
+            <button
+              onClick={() => {
+                if (!earned) {
+                  setEarned(true);
+                  addStars(1);
+                  speak(`Amazing! You traced ${displayLetter}!`);
+                } else {
+                  speak(`That's the letter ${displayLetter}!`);
+                }
+              }}
+              className="rounded-xl bg-mint px-5 py-2 font-bold"
+            >
+              ✓ Check my tracing!
+            </button>
+          </div>
         </div>
+
         <div className="flex flex-col gap-3">
           <p className="text-sm font-semibold text-muted-foreground">Choose a letter</p>
           <div className="grid max-h-[28rem] w-full grid-cols-6 gap-1.5 overflow-auto md:w-56 md:grid-cols-4">
             {ALPHABET.map((a) => (
-              <button key={a.letter} onClick={() => { setLetter(a.letter); speak(a.letter); }}
+              <button key={a.letter} onClick={() => { setLetter(a.letter); speak(isLower ? a.letter.toLowerCase() : a.letter); }}
                 className={`rounded-lg py-2 font-display text-lg font-bold transition ${letter === a.letter ? "bg-pink shadow-md scale-105" : "bg-muted hover:bg-accent"}`}>
-                {a.letter}
+                {isLower ? a.letter.toLowerCase() : a.letter}
               </button>
             ))}
           </div>
-          <button onClick={clear} className="card-soft mt-2 rounded-xl bg-sky px-4 py-3 font-bold">↻ Clear</button>
         </div>
       </div>
     </Section>
