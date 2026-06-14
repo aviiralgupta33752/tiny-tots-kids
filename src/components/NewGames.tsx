@@ -8,41 +8,67 @@ import type { Difficulty } from "@/lib/rewards";
 export function SightWordsGame({ difficulty }: { difficulty: Difficulty }) {
   const pool = difficulty === "easy" ? SIGHT_WORDS.slice(0,15) : difficulty === "medium" ? SIGHT_WORDS.slice(0,30) : SIGHT_WORDS;
   const [index, setIndex] = useState(0);
-  const [flipped, setFlipped] = useState(false);
   const [score, setScore] = useState(0);
+  const [picked, setPicked] = useState<string | null>(null);
   const shuffled = useRef([...pool].sort(() => Math.random() - 0.5));
   const word = shuffled.current[index % shuffled.current.length];
 
-  function sayWord() { speak(word); }
+  // Make 3 wrong options + correct
+  function getOptions() {
+    const wrong = pool.filter(w => w !== word).sort(() => Math.random() - 0.5).slice(0, 3);
+    return [word, ...wrong].sort(() => Math.random() - 0.5);
+  }
+  const options = useRef(getOptions());
 
-  function next(knew: boolean) {
-    if (knew) { addStars(1); setScore(s => s + 1); }
-    setFlipped(false);
-    setIndex(i => i + 1);
-    if (index + 1 >= shuffled.current.length) {
-      shuffled.current = [...pool].sort(() => Math.random() - 0.5);
+  useEffect(() => {
+    setTimeout(() => speak(`Which one says... ${word}?`), 400);
+  }, [index]);
+
+  function pick(w: string) {
+    if (picked) return;
+    setPicked(w);
+    if (w === word) {
+      addStars(1); setScore(s => s + 1);
+      speak(`Yes! That word says ${word}! Great reading!`);
+    } else {
+      speak(`The word is ${word}! Try again next time!`);
     }
+  }
+
+  function next() {
+    setIndex(i => {
+      const next = i + 1;
+      if (next >= shuffled.current.length) shuffled.current = [...pool].sort(() => Math.random() - 0.5);
+      return next;
+    });
+    setPicked(null);
+    options.current = getOptions();
   }
 
   return (
     <div className="card-soft mx-auto max-w-lg p-6 text-center">
-      <div className="mb-3 text-sm font-bold text-muted-foreground">⭐ {score} words known · Card {(index % pool.length) + 1} of {pool.length}</div>
-      <p className="mb-4 text-sm font-semibold">Can you read this word?</p>
-      <button
-        onClick={() => { setFlipped(true); sayWord(); }}
-        className="mb-6 w-full rounded-3xl bg-butter p-8 text-5xl font-bold font-display shadow-md hover:scale-105 transition"
-      >
-        {word}
-        {!flipped && <div className="mt-2 text-sm font-normal text-muted-foreground">Tap to hear it 🔊</div>}
+      <div className="mb-3 text-sm font-bold text-muted-foreground">⭐ {score} correct · Word {(index % pool.length) + 1} of {pool.length}</div>
+      <p className="mb-2 text-sm font-semibold">Listen and find the word!</p>
+      <button onClick={() => speak(`Which one says... ${word}?`)}
+        className="mb-6 rounded-2xl bg-lilac px-6 py-3 font-bold">
+        🔊 Hear it again
       </button>
-      {flipped && (
-        <div className="grid grid-cols-2 gap-3">
-          <button onClick={() => next(false)} className="rounded-2xl bg-pink py-4 text-lg font-bold">
-            😅 Not yet
+      <div className="grid grid-cols-2 gap-4">
+        {options.current.map(w => (
+          <button key={w} onClick={() => pick(w)} disabled={!!picked}
+            className={`rounded-2xl py-6 font-display text-3xl font-bold transition-all ${
+              picked === null ? "bg-butter hover:scale-105 cursor-pointer" :
+              w === word ? "bg-mint scale-105 shadow-md" :
+              w === picked ? "bg-pink/60" : "bg-muted opacity-50"
+            }`}>
+            {w}
           </button>
-          <button onClick={() => next(true)} className="rounded-2xl bg-mint py-4 text-lg font-bold">
-            ⭐ I knew it!
-          </button>
+        ))}
+      </div>
+      {picked && (
+        <div className="mt-4">
+          <p className="mb-3 text-xl font-bold">{picked === word ? "🎉 You read it!" : `The word was "${word}"`}</p>
+          <button onClick={next} className="rounded-2xl bg-sky px-8 py-3 font-bold">Next →</button>
         </div>
       )}
     </div>
@@ -376,6 +402,10 @@ const WEATHER = [
 export function WeatherCalendar() {
   const now = new Date();
   const [pickedWeather, setPickedWeather] = useState<typeof WEATHER[0] | null>(null);
+  useEffect(() => {
+    const day = DAYS[now.getDay()]; const month = MONTHS[now.getMonth()];
+    setTimeout(() => speak(`Today is ${day}, ${month} ${now.getDate()}! What is the weather like today?`), 400);
+  }, []);
 
   const day = DAYS[now.getDay()];
   const month = MONTHS[now.getMonth()];
