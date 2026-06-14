@@ -14,5 +14,5 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  return <LearnApp />;
+  return <LearnApp childProfile={{ name: "Friend", age: 4 }} onSignOut={() => {}} />;
 }
