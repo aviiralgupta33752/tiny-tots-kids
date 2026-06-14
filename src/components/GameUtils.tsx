@@ -109,7 +109,7 @@ export function ProgressBar({ current, total, color = "bg-pink" }: { current:num
 // ── useConfetti ───────────────────────────────────────────────────────────────
 export function useConfetti() {
   const [active, setActive] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
  
   function fire() {
     if (timerRef.current) clearTimeout(timerRef.current);
