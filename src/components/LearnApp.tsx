@@ -44,7 +44,12 @@ function getCurriculumTab(): TabKey {
   return CURRICULUM[slot % CURRICULUM.length];
 }
 
-export function LearnApp() {
+import { getTabsForAge } from "@/components/OnboardingPage";
+import type { ChildProfile } from "@/components/OnboardingPage";
+
+export function LearnApp({ childProfile, onSignOut }: { childProfile: ChildProfile; onSignOut: () => void }) {
+  const allowedTabs = getTabsForAge(childProfile.age);
+  const visibleTabs = TABS.filter(t => allowedTabs.includes(t.key));
   const [tab, setTab] = useState<TabKey>("abc");
   const stars = useStars();
   const streak = useStreak();
@@ -107,7 +112,7 @@ export function LearnApp() {
           <div className="grid h-12 w-12 place-items-center rounded-2xl bg-pink text-2xl shadow-md">🌈</div>
           <div>
             <h1 className="text-2xl font-bold sm:text-3xl">Tiny Tots</h1>
-            <p className="text-xs text-muted-foreground">Tap, listen, learn — together.</p>
+            <p className="text-xs text-muted-foreground">Hi {childProfile.name}! 👋</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -275,7 +280,7 @@ function NumberGrid() {
     <Section title="Numbers 1 to 10" subtitle="Count along out loud!">
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
         {NUMBERS.map((n,i) => (
-          <Tile key={n.n} tone={TONES[i%TONES.length]} onClick={() => speak(`${NUMBER_WORDS[i]}. ${n.n}`)} big>
+          <Tile key={n.n} tone={TONES[i%TONES.length]} onClick={() => speak(`The number ${NUMBER_WORDS[i]}! ${n.n === 1 ? "one star" : `${n.n} stars`}`)} big>
             <span className="text-6xl font-bold font-display sm:text-7xl">{n.n}</span>
             <div className="flex flex-wrap justify-center gap-0.5">
               {Array.from({length:n.n}).map((_,j) => <span key={j} className="text-lg">⭐</span>)}
@@ -438,7 +443,8 @@ function MatchGame() {
   const [correct, setCorrect] = useState(false);
   const set = useRef(rollSet());
   function rollSet() { const items=[...ALPHABET].sort(()=>Math.random()-.5).slice(0,4); const answer=items[Math.floor(Math.random()*items.length)]; return {items,answer}; }
-  function sayPrompt() { speak(`Find the letter ${set.current.answer.letter}`); }
+  function sayPrompt() { speak(`Can you find the letter ${set.current.answer.letter}? Tap it!`); }
+  useEffect(() => { setTimeout(sayPrompt, 500); }, [round]);
   function next() { set.current=rollSet(); setPicked(null); setCorrect(false); setRound(r=>r+1); }
   function pick(letter: string) {
     setPicked(letter);
