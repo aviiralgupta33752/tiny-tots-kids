@@ -1,7 +1,6 @@
 type SpeakOptions = { pitch?: number; rate?: number };
 
 let voicesLoaded = false;
-let currentUtterance: SpeechSynthesisUtterance | null = null;
 let cancelled = false;
 
 function loadVoices(): Promise<void> {
@@ -27,7 +26,6 @@ function getBestVoice(): SpeechSynthesisVoice | null {
 
 export function stopSpeaking() {
   cancelled = true;
-  currentUtterance = null;
   if (typeof window !== "undefined" && "speechSynthesis" in window) {
     window.speechSynthesis.cancel();
   }
@@ -39,25 +37,20 @@ async function playUtterance(
   onWord?: (index: number) => void
 ): Promise<void> {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-
   window.speechSynthesis.cancel();
   cancelled = false;
-
   if (!voicesLoaded) await loadVoices();
   if (cancelled) return;
 
   return new Promise((resolve) => {
     if (cancelled) { resolve(); return; }
-
     const utter = new SpeechSynthesisUtterance(text);
-    utter.pitch = opts?.pitch ?? 1.2;
-    utter.rate  = opts?.rate  ?? 0.65;
+    // Normal speed — not too slow or it garbles
+    utter.pitch = opts?.pitch ?? 1.1;
+    utter.rate  = opts?.rate  ?? 0.9;
     utter.volume = 1;
-
     const voice = getBestVoice();
     if (voice) utter.voice = voice;
-
-    currentUtterance = utter;
 
     if (onWord) {
       const words = text.split(/\s+/).filter(Boolean);
@@ -67,10 +60,8 @@ async function playUtterance(
         if (e.name === "word" && idx < words.length) onWord(idx++);
       };
     }
-
-    utter.onend = () => { currentUtterance = null; resolve(); };
-    utter.onerror = () => { currentUtterance = null; resolve(); };
-
+    utter.onend = () => resolve();
+    utter.onerror = () => resolve();
     if (!cancelled) window.speechSynthesis.speak(utter);
     else resolve();
   });
