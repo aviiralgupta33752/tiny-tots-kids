@@ -1,10 +1,6 @@
 import { useState } from "react";
 import { speak } from "@/lib/speak";
-
-export interface ChildProfile {
-  name: string;
-  age: number;
-}
+import type { ChildProfile } from "@/hooks/useAuth";
 
 const AGES = [
   { age: 3, emoji: "🐣", label: "3 years old", grade: "Pre-K" },
