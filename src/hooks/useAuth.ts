@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
-import type { ChildProfile } from "@/components/OnboardingPage";
+
+export interface ChildProfile {
+  name: string;
+  age: number;
+}
 
 const PROFILE_KEY = "tt_child_profile_v1";
 
@@ -11,14 +15,12 @@ export function useAuth() {
   const [childProfile, setChildProfile] = useState<ChildProfile | null>(null);
 
   useEffect(() => {
-    // Check current session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) loadProfile();
       setLoading(false);
     });
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) loadProfile();
