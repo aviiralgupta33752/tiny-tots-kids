@@ -50,7 +50,7 @@ import type { ChildProfile } from "@/components/OnboardingPage";
 export function LearnApp({ childProfile, onSignOut }: { childProfile: ChildProfile; onSignOut: () => void }) {
   const allowedTabs = getTabsForAge(childProfile.age);
   const visibleTabs = TABS.filter(t => allowedTabs.includes(t.key));
-  const [tab, setTab] = useState<TabKey>("abc");
+  const [tab, setTab] = useState<TabKey>((allowedTabs[0] as TabKey) ?? "abc");
   const stars = useStars();
   const streak = useStreak();
   const [difficulty, setDifficulty] = useDifficulty();
@@ -121,7 +121,15 @@ export function LearnApp({ childProfile, onSignOut }: { childProfile: ChildProfi
               🔥 {streak}d
             </div>
           )}
-          <button onClick={() => { const on = toggleBgMusic(); setMusicOn(on); }}
+          <button onClick={onSignOut}
+            className="card-soft rounded-full px-3 py-2 text-xs font-bold hover:scale-105 transition bg-muted">
+            🚪 Sign out
+          </button>
+          {typeof window !== "undefined" && window.location && (
+            <a href="/admin" className="card-soft rounded-full px-3 py-2 text-xs font-bold hover:scale-105 transition bg-lilac">
+              ⚙️ Admin
+            </a>
+          )}
             className="card-soft rounded-full px-3 py-2 text-lg font-bold hover:scale-105 transition">
             {musicOn ? "🎵" : "🔇"}
           </button>
@@ -175,7 +183,7 @@ export function LearnApp({ childProfile, onSignOut }: { childProfile: ChildProfi
       {/* Nav */}
       <nav className="mx-auto mb-8 max-w-6xl">
         <div className="card-soft flex flex-wrap gap-2 p-2">
-          {TABS.map(t => (
+          {visibleTabs.map(t => (
             <button key={t.key} onClick={() => switchTab(t.key)}
               className={`flex-1 min-w-[80px] rounded-xl px-3 py-3 text-xs font-semibold transition-all sm:text-sm ${
                 tab===t.key ? "bg-foreground text-background shadow-md scale-[1.02]" : "hover:bg-muted text-foreground/80"
