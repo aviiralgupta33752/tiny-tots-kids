@@ -45,7 +45,7 @@ function getCurriculumTab(): TabKey {
 }
 
 import { getTabsForAge } from "@/components/OnboardingPage";
-import type { ChildProfile } from "@/components/OnboardingPage";
+import type { ChildProfile } from "@/hooks/useAuth";
 
 export function LearnApp({ childProfile, onSignOut }: { childProfile: ChildProfile; onSignOut: () => void }) {
   const allowedTabs = getTabsForAge(childProfile.age);
