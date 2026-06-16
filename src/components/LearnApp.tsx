@@ -10,8 +10,18 @@ import { AvatarDisplay, AvatarPicker, loadAvatar, type AvatarState } from "@/com
 import { playAnimalSound, stopAllSounds, startBgMusic, stopBgMusic, toggleBgMusic } from "@/lib/audioManager";
 import { ColoringPage } from "@/components/ColoringPage";
 import { SightWordsGame, PhonicsGame, MemoryGame, BodyPartsGame, EmotionsGame, WeatherCalendar } from "@/components/NewGames";
+import {
+  OppositesGame, InstructionsGame, PatternsGame, DaysGame, HelpersGame, SharingGame,
+  BigCountGame, TimeGame, MoneyGame, PlantsGame, SeasonsGame, MapsGame,
+  ComprehensionGame, PlaceValueGame, MeasureGame, LifeCycleGame, SpaceGame, CitizenGame,
+  ParagraphGame, MultiplyGame, FractionsGame, GeographyGame, EcosystemsGame, MatterGame, CodingGame,
+} from "@/components/CurriculumGames";
 
-type TabKey = "abc"|"123"|"colors"|"shapes"|"animals"|"story"|"spell"|"count"|"math"|"rhyme"|"sight"|"phonics"|"memory"|"body"|"emotions"|"weather"|"trace"|"match"|"quiz"|"color"|"rewards";
+type TabKey = "abc"|"123"|"colors"|"shapes"|"animals"|"story"|"spell"|"count"|"math"|"rhyme"|"sight"|"phonics"|"memory"|"body"|"emotions"|"weather"|"trace"|"match"|"quiz"|"color"|"rewards"
+  |"opposites"|"instructions"|"patterns"|"days"|"helpers"|"sharing"
+  |"bigcount"|"time"|"money"|"plants"|"seasons"|"maps"
+  |"comprehension"|"placevalue"|"measure"|"lifecycle"|"space"|"citizen"
+  |"paragraph"|"multiply"|"fractions"|"geography"|"ecosystems"|"matter"|"coding";
 
 const TABS: { key: TabKey; label: string; emoji: string }[] = [
   { key:"abc",      label:"ABCs",        emoji:"🔤" },
@@ -34,6 +44,36 @@ const TABS: { key: TabKey; label: string; emoji: string }[] = [
   { key:"match",    label:"Match",       emoji:"🧩" },
   { key:"quiz",     label:"Quiz",        emoji:"❓" },
   { key:"color",    label:"Color!",      emoji:"🖍️" },
+  // Age 3
+  { key:"opposites",   label:"Opposites",     emoji:"↔️" },
+  { key:"instructions",label:"Simon Says",    emoji:"🎯" },
+  // Age 4
+  { key:"patterns",    label:"Patterns",      emoji:"🔁" },
+  { key:"days",        label:"Days",          emoji:"📅" },
+  { key:"helpers",     label:"Helpers",       emoji:"👩‍⚕️" },
+  { key:"sharing",     label:"Sharing",       emoji:"🤝" },
+  // Age 5
+  { key:"bigcount",    label:"1 to 100",      emoji:"💯" },
+  { key:"time",        label:"Telling Time",  emoji:"🕐" },
+  { key:"money",       label:"Money",         emoji:"💰" },
+  { key:"plants",      label:"Plants",        emoji:"🌱" },
+  { key:"seasons",     label:"Seasons",       emoji:"🍂" },
+  { key:"maps",        label:"Maps",          emoji:"🗺️" },
+  // Age 6
+  { key:"comprehension",label:"Read & Think", emoji:"📚" },
+  { key:"placevalue",  label:"Place Value",   emoji:"🔢" },
+  { key:"measure",     label:"Measuring",     emoji:"📏" },
+  { key:"lifecycle",   label:"Life Cycles",   emoji:"🦋" },
+  { key:"space",       label:"Earth & Sky",   emoji:"🌍" },
+  { key:"citizen",     label:"Be Kind",       emoji:"🌟" },
+  // Age 7
+  { key:"paragraph",   label:"Writing",       emoji:"✏️" },
+  { key:"multiply",    label:"Multiply",      emoji:"✖️" },
+  { key:"fractions",   label:"Fractions",     emoji:"½" },
+  { key:"geography",   label:"Countries",     emoji:"🌎" },
+  { key:"ecosystems",  label:"Ecosystems",    emoji:"🌳" },
+  { key:"matter",      label:"Matter",        emoji:"💧" },
+  { key:"coding",      label:"Coding",        emoji:"🤖" },
   { key:"rewards",  label:"Rewards",     emoji:"🏆" },
 ];
 
@@ -212,6 +252,31 @@ export function LearnApp({ childProfile, onSignOut }: { childProfile: ChildProfi
         {tab==="match"    && <MatchGame />}
         {tab==="quiz"     && <QuizGame />}
         {tab==="color"    && <Section title="Free Time 🖍️" subtitle="Color and draw — it's your art!"><ColoringPage /></Section>}
+        {tab==="opposites"   && <Section title="Opposites ↔️" subtitle="Tap a pair to hear them!"><OppositesGame /></Section>}
+        {tab==="instructions"&& <Section title="Simon Says 🎯" subtitle="Follow the instruction!"><InstructionsGame /></Section>}
+        {tab==="patterns"    && <Section title="Patterns 🔁" subtitle="What comes next?"><PatternsGame /></Section>}
+        {tab==="days"        && <Section title="Days of the Week 📅" subtitle="Learn the 7 days!"><DaysGame /></Section>}
+        {tab==="helpers"     && <Section title="Community Helpers 👩‍⚕️" subtitle="People who help us!"><HelpersGame /></Section>}
+        {tab==="sharing"     && <Section title="Sharing & Teamwork 🤝" subtitle="What's the kind choice?"><SharingGame /></Section>}
+        {tab==="bigcount"    && <Section title="Counting to 100 💯" subtitle="Tap to count!"><BigCountGame /></Section>}
+        {tab==="time"        && <Section title="Telling Time 🕐" subtitle="What time is it?"><TimeGame /></Section>}
+        {tab==="money"       && <Section title="Money & Coins 💰" subtitle="Learn about coins!"><MoneyGame /></Section>}
+        {tab==="plants"      && <Section title="Plants 🌱" subtitle="Discover plants!"><PlantsGame /></Section>}
+        {tab==="seasons"     && <Section title="Seasons 🍂" subtitle="The four seasons!"><SeasonsGame /></Section>}
+        {tab==="maps"        && <Section title="Maps & Directions 🗺️" subtitle="Which way to go?"><MapsGame /></Section>}
+        {tab==="comprehension" && <Section title="Read & Think 📚" subtitle="Read the story, answer the question!"><ComprehensionGame /></Section>}
+        {tab==="placevalue"  && <Section title="Place Value 🔢" subtitle="Hundreds, tens, and ones!"><PlaceValueGame /></Section>}
+        {tab==="measure"     && <Section title="Measuring 📏" subtitle="How big is it?"><MeasureGame /></Section>}
+        {tab==="lifecycle"   && <Section title="Life Cycles 🦋" subtitle="How living things grow!"><LifeCycleGame /></Section>}
+        {tab==="space"       && <Section title="Earth, Moon & Sun 🌍" subtitle="Explore space!"><SpaceGame /></Section>}
+        {tab==="citizen"     && <Section title="Good Citizen 🌟" subtitle="Ways to be kind!"><CitizenGame /></Section>}
+        {tab==="paragraph"   && <Section title="Paragraph Writing ✏️" subtitle="Write your own paragraph!"><ParagraphGame /></Section>}
+        {tab==="multiply"    && <Section title="Multiplication ✖️" subtitle="Solve the problem!"><MultiplyGame /></Section>}
+        {tab==="fractions"   && <Section title="Fractions ½" subtitle="Parts of a whole!"><FractionsGame /></Section>}
+        {tab==="geography"   && <Section title="States & Countries 🌎" subtitle="Places around the world!"><GeographyGame /></Section>}
+        {tab==="ecosystems"  && <Section title="Ecosystems 🌳" subtitle="Where animals live!"><EcosystemsGame /></Section>}
+        {tab==="matter"      && <Section title="Matter 💧" subtitle="Solid, liquid, gas!"><MatterGame /></Section>}
+        {tab==="coding"      && <Section title="Coding & Logic 🤖" subtitle="Program the robot to the star!"><CodingGame /></Section>}
         {tab==="rewards"  && <RewardsPanel stars={stars} streak={streak} avatar={avatar} onEditAvatar={() => setShowAvatarPicker(true)} />}
       </main>
     </div>
