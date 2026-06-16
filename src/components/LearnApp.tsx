@@ -125,11 +125,6 @@ export function LearnApp({ childProfile, onSignOut }: { childProfile: ChildProfi
             className="card-soft rounded-full px-3 py-2 text-xs font-bold hover:scale-105 transition bg-muted">
             🚪 Sign out
           </button>
-          {typeof window !== "undefined" && window.location && (
-            <a href="/admin" className="card-soft rounded-full px-3 py-2 text-xs font-bold hover:scale-105 transition bg-lilac">
-              ⚙️ Admin
-            </a>
-          )}
           <button onClick={() => { const on = toggleBgMusic(); setMusicOn(on); }}
             className="card-soft rounded-full px-3 py-2 text-lg font-bold hover:scale-105 transition">
             {musicOn ? "🎵" : "🔇"}
