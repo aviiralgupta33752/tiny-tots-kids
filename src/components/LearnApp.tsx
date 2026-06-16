@@ -10,8 +10,18 @@ import { AvatarDisplay, AvatarPicker, loadAvatar, type AvatarState } from "@/com
 import { playAnimalSound, stopAllSounds, startBgMusic, stopBgMusic, toggleBgMusic } from "@/lib/audioManager";
 import { ColoringPage } from "@/components/ColoringPage";
 import { SightWordsGame, PhonicsGame, MemoryGame, BodyPartsGame, EmotionsGame, WeatherCalendar } from "@/components/NewGames";
+import {
+  OppositesGame, InstructionsGame, PatternsGame, DaysGame, HelpersGame, SharingGame,
+  BigCountGame, TimeGame, MoneyGame, PlantsGame, SeasonsGame, MapsGame,
+  ComprehensionGame, PlaceValueGame, MeasureGame, LifeCycleGame, SpaceGame, CitizenGame,
+  ParagraphGame, MultiplyGame, FractionsGame, GeographyGame, EcosystemsGame, MatterGame, CodingGame,
+} from "@/components/CurriculumGames";
 
-type TabKey = "abc"|"123"|"colors"|"shapes"|"animals"|"story"|"spell"|"count"|"math"|"rhyme"|"sight"|"phonics"|"memory"|"body"|"emotions"|"weather"|"trace"|"match"|"quiz"|"color"|"rewards";
+type TabKey = "abc"|"123"|"colors"|"shapes"|"animals"|"story"|"spell"|"count"|"math"|"rhyme"|"sight"|"phonics"|"memory"|"body"|"emotions"|"weather"|"trace"|"match"|"quiz"|"color"|"rewards"
+  |"opposites"|"instructions"|"patterns"|"days"|"helpers"|"sharing"
+  |"bigcount"|"time"|"money"|"plants"|"seasons"|"maps"
+  |"comprehension"|"placevalue"|"measure"|"lifecycle"|"space"|"citizen"
+  |"paragraph"|"multiply"|"fractions"|"geography"|"ecosystems"|"matter"|"coding";
 
 const TABS: { key: TabKey; label: string; emoji: string }[] = [
   { key:"abc",      label:"ABCs",        emoji:"🔤" },
@@ -34,6 +44,36 @@ const TABS: { key: TabKey; label: string; emoji: string }[] = [
   { key:"match",    label:"Match",       emoji:"🧩" },
   { key:"quiz",     label:"Quiz",        emoji:"❓" },
   { key:"color",    label:"Color!",      emoji:"🖍️" },
+  // Age 3
+  { key:"opposites",   label:"Opposites",     emoji:"↔️" },
+  { key:"instructions",label:"Simon Says",    emoji:"🎯" },
+  // Age 4
+  { key:"patterns",    label:"Patterns",      emoji:"🔁" },
+  { key:"days",        label:"Days",          emoji:"📅" },
+  { key:"helpers",     label:"Helpers",       emoji:"👩‍⚕️" },
+  { key:"sharing",     label:"Sharing",       emoji:"🤝" },
+  // Age 5
+  { key:"bigcount",    label:"1 to 100",      emoji:"💯" },
+  { key:"time",        label:"Telling Time",  emoji:"🕐" },
+  { key:"money",       label:"Money",         emoji:"💰" },
+  { key:"plants",      label:"Plants",        emoji:"🌱" },
+  { key:"seasons",     label:"Seasons",       emoji:"🍂" },
+  { key:"maps",        label:"Maps",          emoji:"🗺️" },
+  // Age 6
+  { key:"comprehension",label:"Read & Think", emoji:"📚" },
+  { key:"placevalue",  label:"Place Value",   emoji:"🔢" },
+  { key:"measure",     label:"Measuring",     emoji:"📏" },
+  { key:"lifecycle",   label:"Life Cycles",   emoji:"🦋" },
+  { key:"space",       label:"Earth & Sky",   emoji:"🌍" },
+  { key:"citizen",     label:"Be Kind",       emoji:"🌟" },
+  // Age 7
+  { key:"paragraph",   label:"Writing",       emoji:"✏️" },
+  { key:"multiply",    label:"Multiply",      emoji:"✖️" },
+  { key:"fractions",   label:"Fractions",     emoji:"½" },
+  { key:"geography",   label:"Countries",     emoji:"🌎" },
+  { key:"ecosystems",  label:"Ecosystems",    emoji:"🌳" },
+  { key:"matter",      label:"Matter",        emoji:"💧" },
+  { key:"coding",      label:"Coding",        emoji:"🤖" },
   { key:"rewards",  label:"Rewards",     emoji:"🏆" },
 ];
 
