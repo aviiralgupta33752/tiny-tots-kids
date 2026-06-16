@@ -78,26 +78,26 @@ export function OnboardingPage({ onDone }: { onDone: (profile: ChildProfile) => 
 // Age-specific curriculum tabs (Tiny Tots Requirement)
 export function getTabsForAge(age: number): string[] {
   if (age <= 3) {
-    // 🌸 Age 3 (Early Preschool): colors, shapes, counting 1-10, alphabet,
-    // animals & sounds, body parts, basic emotions, follow instructions
-    return ["colors","shapes","123","abc","animals","body","emotions","color","rewards"];
+    // 🌸 Age 3: colors, shapes, counting 1-10, alphabet, animals & sounds,
+    // body parts, opposites, follow instructions, basic emotions
+    return ["colors","shapes","123","abc","animals","body","opposites","instructions","emotions","color","rewards"];
   }
   if (age === 4) {
-    // 🌱 Age 4 (Preschool): letter sounds, writing letters, counting 1-20,
-    // sorting/patterns, days of week, weather, community helpers, puzzles
-    return ["abc","phonics","trace","123","count","match","memory","weather","story","emotions","color","rewards"];
+    // 🌱 Age 4: letter sounds, writing letters, counting 1-20, sorting/patterns,
+    // days of week, weather, community helpers, simple puzzles, sharing/teamwork
+    return ["phonics","trace","123","count","patterns","days","weather","helpers","memory","sharing","emotions","color","rewards"];
   }
   if (age === 5) {
-    // 🚀 Age 5 (Kindergarten): reading simple words, sight words, counting 100,
-    // addition/subtraction <10, time, money, plants/animals, seasons, maps
-    return ["sight","spell","phonics","123","count","math","story","animals","weather","memory","color","rewards"];
+    // 🚀 Age 5: reading simple words, sight words, counting 100, +/- <10,
+    // telling time, money, plants & animals, seasons, maps & directions
+    return ["sight","spell","bigcount","math","time","money","plants","animals","seasons","maps","story","color","rewards"];
   }
   if (age === 6) {
-    // 📚 Age 6 (1st Grade): reading short books, comprehension, sentences,
-    // add/sub <20, place value, measurement, life cycles, earth/moon/sun
-    return ["story","spell","sight","math","count","memory","body","weather","animals","quiz","color","rewards"];
+    // 📚 Age 6: short books, comprehension, sentences, +/- <20,
+    // place value, measurement, life cycles, earth/moon/sun, good citizenship
+    return ["story","comprehension","spell","math","placevalue","measure","lifecycle","space","citizen","sight","color","rewards"];
   }
-  // ⭐ Age 7 (Advanced 1st Grade): paragraph writing, multiplication,
-  // add/sub <100, fractions, money & change, states, ecosystems, matter, coding
-  return ["spell","math","quiz","story","sight","phonics","memory","weather","animals","body","color","rewards"];
+  // ⭐ Age 7: paragraph writing, multiplication, +/- <100, fractions,
+  // money & change, states/countries, ecosystems, matter, coding & logic
+  return ["paragraph","multiply","math","fractions","money","geography","ecosystems","matter","coding","comprehension","color","rewards"];
 }
