@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tiny Tots — Learn, Play, Grow Together</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --pink: #ff8fab; --mint: #b5ead7; --butter: #ffd166;
+      --sky: #a0c4ff; --lilac: #c8a8ff; --peach: #ffb347;
+      --bg: #fffbf5; --dark: #2d2d2d;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--dark); overflow-x: hidden; }
+    h1,h2,h3,h4 { font-family: 'Fredoka One', cursive; }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 2rem; background: white;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+    }
+    .logo { display: flex; align-items: center; gap: .6rem; font-family: 'Fredoka One',cursive; font-size: 1.6rem; text-decoration: none; color: var(--dark); }
+    .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+    .nav-links a { text-decoration: none; color: var(--dark); font-weight: 700; font-size: .95rem; transition: color .2s; }
+    .nav-links a:hover { color: var(--pink); }
+    .btn { display: inline-flex; align-items: center; gap: .5rem; padding: .65rem 1.5rem; border-radius: 999px; font-weight: 800; text-decoration: none; border: none; cursor: pointer; font-family: 'Nunito', sans-serif; font-size: 1rem; transition: transform .2s, box-shadow .2s; }
+    .btn:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(0,0,0,0.15); }
+    .btn-pink { background: var(--pink); color: white; }
+    .btn-outline { background: transparent; border: 2.5px solid var(--dark); color: var(--dark); }
+    .btn-white { background: white; color: var(--dark); }
+    .btn-lg { padding: 1rem 2.5rem; font-size: 1.15rem; }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 92vh; display: flex; align-items: center; justify-content: center;
+      padding: 5rem 2rem 3rem; text-align: center;
+      background: linear-gradient(160deg, #fff5f8 0%, #f0fbf6 40%, #f5f0ff 100%);
+      position: relative; overflow: hidden;
+    }
+    .hero-blob { position: absolute; border-radius: 50%; filter: blur(60px); opacity: .25; pointer-events: none; }
+    .hero-content { position: relative; z-index: 1; max-width: 760px; }
+    .hero-badge { display: inline-block; background: var(--mint); border-radius: 999px; padding: .4rem 1.2rem; font-weight: 800; font-size: .9rem; margin-bottom: 1.2rem; }
+    .hero h1 { font-size: clamp(3rem, 8vw, 5.5rem); line-height: 1.05; margin-bottom: 1.2rem; }
+    .hero h1 .highlight { color: var(--pink); }
+    .hero p { font-size: 1.2rem; color: #555; line-height: 1.75; max-width: 560px; margin: 0 auto 2.5rem; }
+    .hero-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-bottom: 3rem; }
+    .hero-animals { display: flex; justify-content: center; gap: 1.5rem; font-size: 3.5rem; margin-bottom: 1rem; }
+    .hero-animals span { animation: float 3s ease-in-out infinite; display: inline-block; }
+    .hero-animals span:nth-child(2) { animation-delay: .5s; }
+    .hero-animals span:nth-child(3) { animation-delay: 1s; }
+    .hero-animals span:nth-child(4) { animation-delay: 1.5s; }
+    .hero-animals span:nth-child(5) { animation-delay: 2s; }
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
+    .hero-note { font-size: .85rem; color: #888; margin-top: .5rem; }
+
+    /* ── STATS ── */
+    .stats { background: white; padding: 3rem 2rem; }
+    .stats-inner { max-width: 900px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 2rem; justify-content: center; }
+    .stat { text-align: center; flex: 1; min-width: 150px; }
+    .stat-num { font-family: 'Fredoka One',cursive; font-size: 3rem; color: var(--pink); }
+    .stat-label { font-size: .9rem; color: #666; font-weight: 700; }
+
+    /* ── WHY ── */
+    .why { padding: 5rem 2rem; background: linear-gradient(135deg, #fff5f8, #f0fbf6); }
+    .section-header { text-align: center; margin-bottom: 3.5rem; }
+    .section-header h2 { font-size: clamp(2rem, 5vw, 3.2rem); margin-bottom: .6rem; }
+    .section-header p { color: #666; font-size: 1.05rem; max-width: 560px; margin: 0 auto; }
+    .why-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; max-width: 1100px; margin: 0 auto; }
+    .why-card { background: white; border-radius: 28px; padding: 2rem; transition: transform .25s, box-shadow .25s; }
+    .why-card:hover { transform: translateY(-8px); box-shadow: 0 16px 40px rgba(0,0,0,0.1); }
+    .why-icon { font-size: 3rem; margin-bottom: 1rem; }
+    .why-card h3 { font-size: 1.35rem; margin-bottom: .5rem; }
+    .why-card p { color: #666; line-height: 1.65; font-size: .95rem; }
+
+    /* ── VS COMPARISON ── */
+    .compare { padding: 5rem 2rem; background: white; }
+    .compare-table { max-width: 800px; margin: 0 auto; border-radius: 24px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.08); }
+    .compare-header { display: grid; grid-template-columns: 2fr 1fr 1fr; background: var(--dark); color: white; padding: 1rem 1.5rem; }
+    .compare-header div { font-family: 'Fredoka One',cursive; font-size: 1.1rem; text-align: center; }
+    .compare-header div:first-child { text-align: left; }
+    .compare-row { display: grid; grid-template-columns: 2fr 1fr 1fr; padding: 1rem 1.5rem; border-bottom: 1px solid #f0f0f0; align-items: center; }
+    .compare-row:last-child { border-bottom: none; }
+    .compare-row:nth-child(even) { background: #fafafa; }
+    .compare-row div { text-align: center; font-size: 1.2rem; }
+    .compare-row div:first-child { text-align: left; font-weight: 700; font-size: .95rem; }
+    .yes { color: #06d6a0; }
+    .no { color: #ff6b6b; }
+    .maybe { color: #ffd166; }
+
+    /* ── SUBJECTS ── */
+    .subjects { padding: 5rem 2rem; background: linear-gradient(135deg, #f5f0ff, #f0fbf6); }
+    .subjects-grid { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; max-width: 900px; margin: 0 auto; }
+    .subject-pill { border-radius: 999px; padding: .8rem 1.6rem; font-weight: 800; font-size: .95rem; display: flex; align-items: center; gap: .5rem; transition: transform .2s; cursor: default; }
+    .subject-pill:hover { transform: scale(1.08); }
+
+    /* ── AGE GROUPS ── */
+    .ages { padding: 5rem 2rem; background: white; }
+    .ages-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; max-width: 1000px; margin: 0 auto; }
+    .age-card { border-radius: 24px; padding: 2rem; text-align: center; transition: transform .25s; }
+    .age-card:hover { transform: scale(1.05); }
+    .age-emoji { font-size: 3rem; margin-bottom: .75rem; }
+    .age-card h3 { font-size: 1.3rem; margin-bottom: .3rem; }
+    .age-card p { font-size: .85rem; color: #555; line-height: 1.6; }
+
+    /* ── TESTIMONIALS ── */
+    .testimonials { padding: 5rem 2rem; background: linear-gradient(135deg, #fff5f8, #fffbf0); }
+    .testimonials-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; max-width: 1000px; margin: 0 auto; }
+    .testimonial { background: white; border-radius: 24px; padding: 2rem; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+    .testimonial-text { font-size: 1rem; line-height: 1.7; color: #444; margin-bottom: 1rem; font-style: italic; }
+    .testimonial-author { display: flex; align-items: center; gap: .75rem; }
+    .testimonial-avatar { font-size: 2rem; }
+    .testimonial-name { font-weight: 800; font-size: .9rem; }
+    .testimonial-role { font-size: .8rem; color: #888; }
+    .stars { color: var(--butter); font-size: 1rem; margin-bottom: .75rem; }
+
+    /* ── HOW IT WORKS ── */
+    .how { padding: 5rem 2rem; background: white; }
+    .steps { display: flex; flex-wrap: wrap; gap: 2rem; justify-content: center; max-width: 1000px; margin: 0 auto; }
+    .step { text-align: center; flex: 1; min-width: 200px; max-width: 220px; }
+    .step-num { width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Fredoka One',cursive; font-size: 1.8rem; margin: 0 auto 1rem; }
+    .step-arrow { font-size: 2rem; color: #ddd; align-self: center; margin-top: -1rem; }
+    .step h3 { font-size: 1.15rem; margin-bottom: .4rem; }
+    .step p { color: #666; font-size: .9rem; line-height: 1.6; }
+
+    /* ── CTA ── */
+    .cta {
+      padding: 6rem 2rem; text-align: center;
+      background: linear-gradient(135deg, var(--pink), var(--lilac));
+      color: white; position: relative; overflow: hidden;
+    }
+    .cta h2 { font-size: clamp(2.2rem, 6vw, 4rem); margin-bottom: 1rem; }
+    .cta p { font-size: 1.2rem; opacity: .9; margin-bottom: 2.5rem; max-width: 500px; margin-left: auto; margin-right: auto; }
+    .cta-animals { font-size: 3rem; margin-bottom: 2rem; }
+    .cta-note { font-size: .85rem; opacity: .75; margin-top: 1rem; }
+
+    /* ── FOOTER ── */
+    footer { background: var(--dark); color: white; padding: 3rem 2rem; text-align: center; }
+    .footer-logo { font-family: 'Fredoka One',cursive; font-size: 1.6rem; margin-bottom: .5rem; }
+    .footer-links { display: flex; gap: 2rem; justify-content: center; margin: 1rem 0; flex-wrap: wrap; }
+    .footer-links a { color: #aaa; text-decoration: none; font-size: .9rem; transition: color .2s; }
+    .footer-links a:hover { color: white; }
+    footer p { color: #666; font-size: .85rem; margin-top: 1rem; }
+
+    @media (max-width: 600px) {
+      .nav-links a:not(.btn) { display: none; }
+      .compare-header, .compare-row { grid-template-columns: 1.5fr 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="logo">🌈 Tiny Tots</a>
+  <div class="nav-links">
+    <a href="#why">Why Us</a>
+    <a href="#subjects">What We Teach</a>
+    <a href="#ages">Ages</a>
+    <a href="#how">How It Works</a>
+    <a href="https://tiny-tots-kids.lovable.app" class="btn btn-pink">Start Free →</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-blob" style="width:500px;height:500px;background:var(--pink);top:-200px;left:-200px"></div>
+  <div class="hero-blob" style="width:400px;height:400px;background:var(--mint);bottom:-150px;right:-150px"></div>
+  <div class="hero-blob" style="width:300px;height:300px;background:var(--butter);top:30%;right:5%"></div>
+
+  <div class="hero-content">
+    <div class="hero-badge">🎉 100% Free to Start — No Credit Card Needed</div>
+    <div class="hero-animals">
+      <span>🐱</span><span>🐶</span><span>🦒</span><span>🐯</span><span>🐼</span>
+    </div>
+    <h1>Where Kids <span class="highlight">Love</span> to Learn!</h1>
+    <p>Tiny Tots is the interactive learning app built for kids ages 3–7. ABCs, numbers, colors, animals, math, stories and more — all wrapped in games, real sounds, and a buddy that grows with your child.</p>
+    <div class="hero-btns">
+      <a href="https://tiny-tots-kids.lovable.app" class="btn btn-pink btn-lg">🚀 Start Learning Free</a>
+      <a href="#why" class="btn btn-outline btn-lg">See Why Parents Love It</a>
+    </div>
+    <p class="hero-note">✨ No ads · No in-app purchases · Safe for kids</p>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="stats">
+  <div class="stats-inner">
+    <div class="stat"><div class="stat-num">10+</div><div class="stat-label">Learning Games</div></div>
+    <div class="stat"><div class="stat-num">3–7</div><div class="stat-label">Ages Supported</div></div>
+    <div class="stat"><div class="stat-num">100+</div><div class="stat-label">Words to Spell</div></div>
+    <div class="stat"><div class="stat-num">5</div><div class="stat-label">Grade Levels</div></div>
+    <div class="stat"><div class="stat-num">0</div><div class="stat-label">Ads. Ever.</div></div>
+  </div>
+</section>
+
+<!-- WHY TINY TOTS -->
+<section class="why" id="why">
+  <div class="section-header">
+    <h2>Why Parents Choose Tiny Tots 💛</h2>
+    <p>Everything your child needs to build a strong learning foundation — in one fun app.</p>
+  </div>
+  <div class="why-grid">
+    <div class="why-card">
+      <div class="why-icon">🎮</div>
+      <h3>Learning Through Play</h3>
+      <p>Every lesson is a game. Kids earn stars, unlock levels, collect stickers and keep daily streaks — making them WANT to come back every day.</p>
+    </div>
+    <div class="why-card">
+      <div class="why-icon">🎯</div>
+      <h3>Built for Their Age</h3>
+      <p>Content automatically adjusts to your child's age. A 3-year-old sees colors and animals. A 7-year-old gets spelling, math and phonics.</p>
+    </div>
+    <div class="why-card">
+      <div class="why-icon">🔊</div>
+      <h3>Real Animal Sounds</h3>
+      <p>Not robot noises — actual animal sounds. Kids hear a real dog bark, lion roar, and monkey call. Learning that sticks!</p>
+    </div>
+    <div class="why-card">
+      <div class="why-icon">👩‍🏫</div>
+      <h3>Interactive Teacher</h3>
+      <p>When a child gets something wrong, a friendly teacher appears and visually walks them through the answer step by step — no frustration!</p>
+    </div>
+    <div class="why-card">
+      <div class="why-icon">🦊</div>
+      <h3>Custom Avatar Buddy</h3>
+      <p>Kids pick their own animal buddy, choose colors and add accessories. Their buddy cheers them on and reacts to their answers!</p>
+    </div>
+    <div class="why-card">
+      <div class="why-icon">🔒</div>
+      <h3>100% Safe & Ad-Free</h3>
+      <p>No ads. No in-app purchases. No scary content. Just pure, safe, educational fun designed specifically for young children.</p>
+    </div>
+    <div class="why-card">
+      <div class="why-icon">📱</div>
+      <h3>Works on Any Device</h3>
+      <p>Phone, tablet, or computer — Tiny Tots works everywhere. No download needed. Just open the browser and start learning!</p>
+    </div>
+    <div class="why-card">
+      <div class="why-icon">🎨</div>
+      <h3>Free Time Too!</h3>
+      <p>After learning, kids can color pictures, draw freely, and explore. Balance between structured learning and creative play.</p>
+    </div>
+    <div class="why-card">
+      <div class="why-icon">🔥</div>
+      <h3>Daily Streaks & Rewards</h3>
+      <p>Kids build learning habits with daily streak counters, star collections, and level-up celebrations that keep them motivated!</p>
+    </div>
+  </div>
+</section>
+
+<!-- VS COMPARISON -->
+<section class="compare" id="compare">
+  <div class="section-header">
+    <h2>How We Compare 🏆</h2>
+    <p>See why families are switching to Tiny Tots</p>
+  </div>
+  <div class="compare-table">
+    <div class="compare-header">
+      <div>Feature</div>
+      <div>🌈 Tiny Tots</div>
+      <div>Others</div>
+    </div>
+    <div class="compare-row"><div>100% Free</div><div class="yes">✅</div><div class="no">❌</div></div>
+    <div class="compare-row"><div>No Ads</div><div class="yes">✅</div><div class="no">❌</div></div>
+    <div class="compare-row"><div>Real Animal Sounds</div><div class="yes">✅</div><div class="maybe">⚠️</div></div>
+    <div class="compare-row"><div>Interactive Teacher Helper</div><div class="yes">✅</div><div class="no">❌</div></div>
+    <div class="compare-row"><div>Custom Avatar</div><div class="yes">✅</div><div class="maybe">⚠️</div></div>
+    <div class="compare-row"><div>Age-Based Content</div><div class="yes">✅</div><div class="yes">✅</div></div>
+    <div class="compare-row"><div>Works in Browser (No Download)</div><div class="yes">✅</div><div class="no">❌</div></div>
+    <div class="compare-row"><div>Daily Streaks & Stars</div><div class="yes">✅</div><div class="maybe">⚠️</div></div>
+    <div class="compare-row"><div>Safe for Kids (No Pop-ups)</div><div class="yes">✅</div><div class="maybe">⚠️</div></div>
+    <div class="compare-row"><div>Free Coloring & Drawing</div><div class="yes">✅</div><div class="no">❌</div></div>
+  </div>
+</section>
+
+<!-- SUBJECTS -->
+<section class="subjects" id="subjects">
+  <div class="section-header">
+    <h2>What We Teach 📚</h2>
+    <p>A complete early learning curriculum packed into every game</p>
+  </div>
+  <div class="subjects-grid">
+    <div class="subject-pill" style="background:#fff5f8">🔤 Alphabet (ABCs)</div>
+    <div class="subject-pill" style="background:#f0fbf6">🔢 Numbers 1–10</div>
+    <div class="subject-pill" style="background:#f5f5ff">🎨 Colors</div>
+    <div class="subject-pill" style="background:#fffbf0">⭐ Shapes</div>
+    <div class="subject-pill" style="background:#fff0f8">🐾 Animals & Sounds</div>
+    <div class="subject-pill" style="background:#f0fff8">📖 Stories</div>
+    <div class="subject-pill" style="background:#fff5f8">✍️ Spelling Games</div>
+    <div class="subject-pill" style="background:#f0fbf6">➕ Math (Add, Subtract, Multiply)</div>
+    <div class="subject-pill" style="background:#f5f5ff">🎵 Rhyming & Phonics</div>
+    <div class="subject-pill" style="background:#fffbf0">👁️ Sight Words</div>
+    <div class="subject-pill" style="background:#fff0f8">✏️ Letter Tracing (A–Z, a–z)</div>
+    <div class="subject-pill" style="background:#f0fff8">🧩 Memory Games</div>
+    <div class="subject-pill" style="background:#fff5f8">🫀 Body Parts</div>
+    <div class="subject-pill" style="background:#f0fbf6">😊 Emotions & Feelings</div>
+    <div class="subject-pill" style="background:#f5f5ff">☀️ Weather & Calendar</div>
+    <div class="subject-pill" style="background:#fffbf0">🖍️ Coloring & Drawing</div>
+  </div>
+</section>
+
+<!-- AGE GROUPS -->
+<section class="ages" id="ages">
+  <div class="section-header">
+    <h2>Perfect for Every Age 🎂</h2>
+    <p>Content grows with your child — from first words to first grade</p>
+  </div>
+  <div class="ages-grid">
+    <div class="age-card" style="background:#fff5f8">
+      <div class="age-emoji">🐣</div>
+      <h3>Age 3–4</h3>
+      <p>Colors, shapes, animals, counting 1–5, emotions, body parts, and free drawing time.</p>
+    </div>
+    <div class="age-card" style="background:#f0fbf6">
+      <div class="age-emoji">🌱</div>
+      <h3>Age 5</h3>
+      <p>ABCs, simple spelling, rhyming, phonics, sight words, stories and matching games.</p>
+    </div>
+    <div class="age-card" style="background:#f5f0ff">
+      <div class="age-emoji">⭐</div>
+      <h3>Age 6</h3>
+      <p>Harder spelling, addition & subtraction, memory games, letter quiz and more!</p>
+    </div>
+    <div class="age-card" style="background:#fffbf0">
+      <div class="age-emoji">🏆</div>
+      <h3>Age 7</h3>
+      <p>Full curriculum including multiplication, advanced phonics, and all learning games.</p>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testimonials">
+  <div class="section-header">
+    <h2>Parents Love It ❤️</h2>
+    <p>Real feedback from real families</p>
+  </div>
+  <div class="testimonials-grid">
+    <div class="testimonial">
+      <div class="stars">⭐⭐⭐⭐⭐</div>
+      <p class="testimonial-text">"My 4-year-old asks to play Tiny Tots every single morning before school. She's already learning to spell! The animal sounds are her absolute favorite."</p>
+      <div class="testimonial-author">
+        <div class="testimonial-avatar">👩</div>
+        <div><div class="testimonial-name">Sarah M.</div><div class="testimonial-role">Mom of a 4-year-old</div></div>
+      </div>
+    </div>
+    <div class="testimonial">
+      <div class="stars">⭐⭐⭐⭐⭐</div>
+      <p class="testimonial-text">"Finally a learning app with NO ads and NO paywalls. My son doesn't even realize he's learning — he thinks it's just a game. His reading improved so much!"</p>
+      <div class="testimonial-author">
+        <div class="testimonial-avatar">👨</div>
+        <div><div class="testimonial-name">Marcus T.</div><div class="testimonial-role">Dad of a 6-year-old</div></div>
+      </div>
+    </div>
+    <div class="testimonial">
+      <div class="stars">⭐⭐⭐⭐⭐</div>
+      <p class="testimonial-text">"The teacher helper feature is genius! When my daughter gets something wrong it shows her exactly how to do it with pictures. She never gets frustrated."</p>
+      <div class="testimonial-author">
+        <div class="testimonial-avatar">👩</div>
+        <div><div class="testimonial-name">Priya K.</div><div class="testimonial-role">Mom of a 5-year-old</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <div class="section-header">
+    <h2>Get Started in 3 Steps 🚀</h2>
+    <p>Your child could be learning in under 2 minutes</p>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num" style="background:var(--pink);color:white">1</div>
+      <h3>Create Free Account</h3>
+      <p>Sign up as a parent in seconds. No credit card, no subscription needed.</p>
+    </div>
+    <div class="step-arrow">→</div>
+    <div class="step">
+      <div class="step-num" style="background:var(--mint)">2</div>
+      <h3>Set Up Your Child</h3>
+      <p>Enter your child's name and age. We'll personalize everything just for them!</p>
+    </div>
+    <div class="step-arrow">→</div>
+    <div class="step">
+      <div class="step-num" style="background:var(--butter)">3</div>
+      <h3>Start Learning!</h3>
+      <p>Pick a buddy, tap letters, count objects, spell words — the fun starts immediately!</p>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta">
+  <div class="cta-animals">🐱 🐶 🦒 🐯 🐼 🦊 🐰 🐧</div>
+  <h2>Ready to Start Learning?</h2>
+  <p>Join kids already learning with Tiny Tots — totally free, totally fun!</p>
+  <a href="https://tiny-tots-kids.lovable.app" class="btn btn-white btn-lg">🌈 Start Free Now →</a>
+  <p class="cta-note">No credit card · No ads · Safe for kids ages 3–7</p>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">🌈 Tiny Tots</div>
+  <p style="color:#aaa;margin-top:.3rem">A fun interactive learning app for kids ages 3–7</p>
+  <div class="footer-links">
+    <a href="https://tiny-tots-kids.lovable.app">Launch App</a>
+    <a href="#why">Why Tiny Tots</a>
+    <a href="#subjects">Subjects</a>
+    <a href="#ages">Age Groups</a>
+    <a href="#how">How It Works</a>
+  </div>
+  <p>Made with ❤️ · No ads · No data sold · Safe for kids</p>
+</footer>
+
+</body>
+</html>
