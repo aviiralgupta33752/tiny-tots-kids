@@ -252,6 +252,31 @@ export function LearnApp({ childProfile, onSignOut }: { childProfile: ChildProfi
         {tab==="match"    && <MatchGame />}
         {tab==="quiz"     && <QuizGame />}
         {tab==="color"    && <Section title="Free Time 🖍️" subtitle="Color and draw — it's your art!"><ColoringPage /></Section>}
+        {tab==="opposites"   && <Section title="Opposites ↔️" subtitle="Tap a pair to hear them!"><OppositesGame /></Section>}
+        {tab==="instructions"&& <Section title="Simon Says 🎯" subtitle="Follow the instruction!"><InstructionsGame /></Section>}
+        {tab==="patterns"    && <Section title="Patterns 🔁" subtitle="What comes next?"><PatternsGame /></Section>}
+        {tab==="days"        && <Section title="Days of the Week 📅" subtitle="Learn the 7 days!"><DaysGame /></Section>}
+        {tab==="helpers"     && <Section title="Community Helpers 👩‍⚕️" subtitle="People who help us!"><HelpersGame /></Section>}
+        {tab==="sharing"     && <Section title="Sharing & Teamwork 🤝" subtitle="What's the kind choice?"><SharingGame /></Section>}
+        {tab==="bigcount"    && <Section title="Counting to 100 💯" subtitle="Tap to count!"><BigCountGame /></Section>}
+        {tab==="time"        && <Section title="Telling Time 🕐" subtitle="What time is it?"><TimeGame /></Section>}
+        {tab==="money"       && <Section title="Money & Coins 💰" subtitle="Learn about coins!"><MoneyGame /></Section>}
+        {tab==="plants"      && <Section title="Plants 🌱" subtitle="Discover plants!"><PlantsGame /></Section>}
+        {tab==="seasons"     && <Section title="Seasons 🍂" subtitle="The four seasons!"><SeasonsGame /></Section>}
+        {tab==="maps"        && <Section title="Maps & Directions 🗺️" subtitle="Which way to go?"><MapsGame /></Section>}
+        {tab==="comprehension" && <Section title="Read & Think 📚" subtitle="Read the story, answer the question!"><ComprehensionGame /></Section>}
+        {tab==="placevalue"  && <Section title="Place Value 🔢" subtitle="Hundreds, tens, and ones!"><PlaceValueGame /></Section>}
+        {tab==="measure"     && <Section title="Measuring 📏" subtitle="How big is it?"><MeasureGame /></Section>}
+        {tab==="lifecycle"   && <Section title="Life Cycles 🦋" subtitle="How living things grow!"><LifeCycleGame /></Section>}
+        {tab==="space"       && <Section title="Earth, Moon & Sun 🌍" subtitle="Explore space!"><SpaceGame /></Section>}
+        {tab==="citizen"     && <Section title="Good Citizen 🌟" subtitle="Ways to be kind!"><CitizenGame /></Section>}
+        {tab==="paragraph"   && <Section title="Paragraph Writing ✏️" subtitle="Write your own paragraph!"><ParagraphGame /></Section>}
+        {tab==="multiply"    && <Section title="Multiplication ✖️" subtitle="Solve the problem!"><MultiplyGame /></Section>}
+        {tab==="fractions"   && <Section title="Fractions ½" subtitle="Parts of a whole!"><FractionsGame /></Section>}
+        {tab==="geography"   && <Section title="States & Countries 🌎" subtitle="Places around the world!"><GeographyGame /></Section>}
+        {tab==="ecosystems"  && <Section title="Ecosystems 🌳" subtitle="Where animals live!"><EcosystemsGame /></Section>}
+        {tab==="matter"      && <Section title="Matter 💧" subtitle="Solid, liquid, gas!"><MatterGame /></Section>}
+        {tab==="coding"      && <Section title="Coding & Logic 🤖" subtitle="Program the robot to the star!"><CodingGame /></Section>}
         {tab==="rewards"  && <RewardsPanel stars={stars} streak={streak} avatar={avatar} onEditAvatar={() => setShowAvatarPicker(true)} />}
       </main>
     </div>
