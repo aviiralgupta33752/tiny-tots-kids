@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ANIMALS, COLORS, SHAPES, TONES, speak, toneClass, type Tone } from "@/lib/learn-data";
+import { ANIMALS, COLORS, NUMBERS, SHAPES, TONES, speak, toneClass, type Tone } from "@/lib/learn-data";
 import { StoryTime } from "@/components/StoryTime";
 import { addStars, earnedStickers, useStars, useStreak, useDifficulty, getCurrentLevel, getNextLevel, LEVELS } from "@/lib/rewards";
 import { prewarm } from "@/lib/speak";
@@ -312,51 +312,192 @@ function Tile({ tone, onClick, children, big }: { tone:Tone; onClick:()=>void; c
 }
 
 function AlphabetGrid({ alphabet }: { alphabet: typeof ALPHABET_DATA["en"] }) {
+  const [mode, setMode] = useState<"learn"|"quiz">("learn");
+  const [round, setRound] = useState(0);
+  const [picked, setPicked] = useState<string|null>(null);
+  const q = useRef(rollQ());
+  function rollQ() { const items=[...alphabet].sort(()=>Math.random()-.5).slice(0,4); const answer=items[Math.floor(Math.random()*items.length)]; return {items,answer}; }
+  function sayPrompt() { speak(`Where is the letter ${q.current.answer.letter}?`); }
+  useEffect(() => { if (mode==="quiz") setTimeout(sayPrompt, 400); }, [round, mode]);
+  function pick(letter: string) {
+    if (picked !== null) return;
+    setPicked(letter);
+    const ok = letter === q.current.answer.letter;
+    if (ok) { addStars(1); speak("Yes! Great job!"); }
+    else speak(`That was ${q.current.answer.letter}! Try again next time!`);
+  }
+  function next() { q.current = rollQ(); setPicked(null); setRound(r => r+1); }
+
   return (
-    <Section title="The Alphabet" subtitle="Tap a letter to hear it!">
-      <div className="grid grid-cols-3 gap-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7">
-        {alphabet.map((a,i) => (
-          <Tile key={a.letter} tone={TONES[i%TONES.length]} onClick={() => speak(`${a.letter} is for ${a.word}`)}>
-            <span className="text-5xl font-bold font-display sm:text-6xl">{a.letter}</span>
-            <span className="text-3xl">{a.emoji}</span>
-            <span className="text-xs font-semibold sm:text-sm">{a.word}</span>
-          </Tile>
-        ))}
+    <Section title="The Alphabet" subtitle={mode==="learn" ? "Tap a letter to hear it!" : "Find the right letter!"}>
+      <div className="mb-5 flex justify-center gap-2">
+        <button onClick={() => setMode("learn")} className={`rounded-xl px-4 py-2 font-bold text-sm ${mode==="learn" ? "bg-foreground text-background" : "bg-muted"}`}>🔤 Learn</button>
+        <button onClick={() => { setMode("quiz"); setRound(r=>r+1); setPicked(null); }} className={`rounded-xl px-4 py-2 font-bold text-sm ${mode==="quiz" ? "bg-foreground text-background" : "bg-muted"}`}>❓ Quiz</button>
       </div>
+
+      {mode === "learn" ? (
+        <div className="grid grid-cols-3 gap-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7">
+          {alphabet.map((a,i) => (
+            <Tile key={a.letter} tone={TONES[i%TONES.length]} onClick={() => speak(`${a.letter} is for ${a.word}`)}>
+              <span className="text-5xl font-bold font-display sm:text-6xl">{a.letter}</span>
+              <span className="text-3xl">{a.emoji}</span>
+              <span className="text-xs font-semibold sm:text-sm">{a.word}</span>
+            </Tile>
+          ))}
+        </div>
+      ) : (
+        <div className="card-soft mx-auto max-w-2xl p-6 text-center">
+          <button onClick={sayPrompt} className="mb-6 inline-flex items-center gap-3 rounded-2xl bg-lilac px-6 py-4 font-display text-xl font-bold shadow-md">
+            🔊 Where is {q.current.answer.letter}?
+          </button>
+          <div key={round} className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {q.current.items.map((a,i) => {
+              const isPicked = picked === a.letter; const isAnswer = a.letter === q.current.answer.letter;
+              const state = picked !== null ? (isAnswer ? "bg-mint scale-105" : isPicked ? "bg-pink/60" : "bg-muted opacity-50") : toneClass(TONES[i%TONES.length]);
+              return (
+                <button key={a.letter} onClick={() => pick(a.letter)} disabled={picked !== null}
+                  className={`tile-pop tile-pop-hover card-soft aspect-square ${state}`}>
+                  <span className="font-display text-6xl font-bold">{a.letter}</span>
+                </button>
+              );
+            })}
+          </div>
+          {picked !== null && (
+            <div className="mt-6">
+              <p className="mb-3 text-xl font-bold">{picked === q.current.answer.letter ? "🎉 Awesome!" : "💪 Good try, keep going!"}</p>
+              <button onClick={next} className="rounded-xl bg-pink px-6 py-3 font-bold text-white">Next →</button>
+            </div>
+          )}
+        </div>
+      )}
     </Section>
   );
 }
 
 function NumberGrid() {
   const NUMBER_WORDS = ["one","two","three","four","five","six","seven","eight","nine","ten"];
+  const [mode, setMode] = useState<"learn"|"quiz">("learn");
+  const [round, setRound] = useState(0);
+  const [picked, setPicked] = useState<number|null>(null);
+  const q = useRef(rollQ());
+  function rollQ() { const items=[...NUMBERS].sort(()=>Math.random()-.5).slice(0,4); const answer=items[Math.floor(Math.random()*items.length)]; return {items,answer}; }
+  function sayPrompt() { speak(`Where is the number ${q.current.answer.n}?`); }
+  useEffect(() => { if (mode==="quiz") setTimeout(sayPrompt, 400); }, [round, mode]);
+  function pick(n: number) {
+    if (picked !== null) return;
+    setPicked(n);
+    const ok = n === q.current.answer.n;
+    if (ok) { addStars(1); speak("Yes! Great job!"); }
+    else speak(`That was ${q.current.answer.n}! Try again next time!`);
+  }
+  function next() { q.current = rollQ(); setPicked(null); setRound(r => r+1); }
+
   return (
-    <Section title="Numbers 1 to 10" subtitle="Count along out loud!">
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
-        {NUMBERS.map((n,i) => (
-          <Tile key={n.n} tone={TONES[i%TONES.length]} onClick={() => speak(`The number ${NUMBER_WORDS[i]}! ${n.n === 1 ? "one star" : `${n.n} stars`}`)} big>
-            <span className="text-6xl font-bold font-display sm:text-7xl">{n.n}</span>
-            <div className="flex flex-wrap justify-center gap-0.5">
-              {Array.from({length:n.n}).map((_,j) => <span key={j} className="text-lg">⭐</span>)}
-            </div>
-            <span className="text-sm font-semibold capitalize">{NUMBER_WORDS[i]}</span>
-          </Tile>
-        ))}
+    <Section title="Numbers 1 to 10" subtitle={mode==="learn" ? "Count along out loud!" : "Find the right number!"}>
+      <div className="mb-5 flex justify-center gap-2">
+        <button onClick={() => setMode("learn")} className={`rounded-xl px-4 py-2 font-bold text-sm ${mode==="learn" ? "bg-foreground text-background" : "bg-muted"}`}>🔢 Learn</button>
+        <button onClick={() => { setMode("quiz"); setRound(r=>r+1); setPicked(null); }} className={`rounded-xl px-4 py-2 font-bold text-sm ${mode==="quiz" ? "bg-foreground text-background" : "bg-muted"}`}>❓ Quiz</button>
       </div>
+
+      {mode === "learn" ? (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
+          {NUMBERS.map((n,i) => (
+            <Tile key={n.n} tone={TONES[i%TONES.length]} onClick={() => speak(`The number ${NUMBER_WORDS[i]}! ${n.n === 1 ? "one star" : `${n.n} stars`}`)} big>
+              <span className="text-6xl font-bold font-display sm:text-7xl">{n.n}</span>
+              <div className="flex flex-wrap justify-center gap-0.5">
+                {Array.from({length:n.n}).map((_,j) => <span key={j} className="text-lg">⭐</span>)}
+              </div>
+              <span className="text-sm font-semibold capitalize">{NUMBER_WORDS[i]}</span>
+            </Tile>
+          ))}
+        </div>
+      ) : (
+        <div className="card-soft mx-auto max-w-2xl p-6 text-center">
+          <button onClick={sayPrompt} className="mb-6 inline-flex items-center gap-3 rounded-2xl bg-lilac px-6 py-4 font-display text-xl font-bold shadow-md">
+            🔊 Where is {q.current.answer.n}?
+          </button>
+          <div key={round} className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {q.current.items.map((n,i) => {
+              const isPicked = picked === n.n; const isAnswer = n.n === q.current.answer.n;
+              const state = picked !== null ? (isAnswer ? "bg-mint scale-105" : isPicked ? "bg-pink/60" : "bg-muted opacity-50") : toneClass(TONES[i%TONES.length]);
+              return (
+                <button key={n.n} onClick={() => pick(n.n)} disabled={picked !== null}
+                  className={`tile-pop tile-pop-hover card-soft aspect-square ${state}`}>
+                  <span className="font-display text-6xl font-bold">{n.n}</span>
+                </button>
+              );
+            })}
+          </div>
+          {picked !== null && (
+            <div className="mt-6">
+              <p className="mb-3 text-xl font-bold">{picked === q.current.answer.n ? "🎉 Awesome!" : "💪 Good try, keep going!"}</p>
+              <button onClick={next} className="rounded-xl bg-pink px-6 py-3 font-bold text-white">Next →</button>
+            </div>
+          )}
+        </div>
+      )}
     </Section>
   );
 }
 
 function ColorGrid() {
+  const [mode, setMode] = useState<"learn"|"quiz">("learn");
+  const [round, setRound] = useState(0);
+  const [picked, setPicked] = useState<string|null>(null);
+  const q = useRef(rollQ());
+  function rollQ() { const items=[...COLORS].sort(()=>Math.random()-.5).slice(0,4); const answer=items[Math.floor(Math.random()*items.length)]; return {items,answer}; }
+  function sayPrompt() { speak(`Where is the color ${q.current.answer.name}?`); }
+  useEffect(() => { if (mode==="quiz") setTimeout(sayPrompt, 400); }, [round, mode]);
+  function pick(name: string) {
+    if (picked !== null) return;
+    setPicked(name);
+    const ok = name === q.current.answer.name;
+    if (ok) { addStars(1); speak("Yes! Great job!"); }
+    else speak(`That was ${q.current.answer.name}! Try again next time!`);
+  }
+  function next() { q.current = rollQ(); setPicked(null); setRound(r => r+1); }
+
   return (
-    <Section title="Colors" subtitle="Tap a color to hear its name!">
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-        {COLORS.map(c => (
-          <button key={c.name} onClick={() => speak(c.phrase)} className="card-soft tile-pop tile-pop-hover flex flex-col items-center gap-3 p-5">
-            <div className="grid h-28 w-28 place-items-center rounded-full text-5xl shadow-inner" style={{backgroundColor:c.hex}}>{c.emoji}</div>
-            <span className="text-lg font-bold font-display">{c.name}</span>
-          </button>
-        ))}
+    <Section title="Colors" subtitle={mode==="learn" ? "Tap a color to hear its name!" : "Find the right color!"}>
+      <div className="mb-5 flex justify-center gap-2">
+        <button onClick={() => setMode("learn")} className={`rounded-xl px-4 py-2 font-bold text-sm ${mode==="learn" ? "bg-foreground text-background" : "bg-muted"}`}>🎨 Learn</button>
+        <button onClick={() => { setMode("quiz"); setRound(r=>r+1); setPicked(null); }} className={`rounded-xl px-4 py-2 font-bold text-sm ${mode==="quiz" ? "bg-foreground text-background" : "bg-muted"}`}>❓ Quiz</button>
       </div>
+
+      {mode === "learn" ? (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+          {COLORS.map(c => (
+            <button key={c.name} onClick={() => speak(c.phrase)} className="card-soft tile-pop tile-pop-hover flex flex-col items-center gap-3 p-5">
+              <div className="grid h-28 w-28 place-items-center rounded-full text-5xl shadow-inner" style={{backgroundColor:c.hex}}>{c.emoji}</div>
+              <span className="text-lg font-bold font-display">{c.name}</span>
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="card-soft mx-auto max-w-2xl p-6 text-center">
+          <button onClick={sayPrompt} className="mb-6 inline-flex items-center gap-3 rounded-2xl bg-lilac px-6 py-4 font-display text-xl font-bold shadow-md">
+            🔊 Where is {q.current.answer.name}?
+          </button>
+          <div key={round} className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {q.current.items.map(c => {
+              const isPicked = picked === c.name; const isAnswer = c.name === q.current.answer.name;
+              const ring = picked !== null ? (isAnswer ? "ring-4 ring-mint scale-105" : isPicked ? "ring-4 ring-pink opacity-70" : "opacity-40") : "";
+              return (
+                <button key={c.name} onClick={() => pick(c.name)} disabled={picked !== null}
+                  className={`card-soft tile-pop tile-pop-hover flex flex-col items-center gap-2 p-4 transition ${ring}`}>
+                  <div className="grid h-20 w-20 place-items-center rounded-full text-3xl shadow-inner" style={{backgroundColor:c.hex}}>{c.emoji}</div>
+                </button>
+              );
+            })}
+          </div>
+          {picked !== null && (
+            <div className="mt-6">
+              <p className="mb-3 text-xl font-bold">{picked === q.current.answer.name ? "🎉 Awesome!" : "💪 Good try, keep going!"}</p>
+              <button onClick={next} className="rounded-xl bg-pink px-6 py-3 font-bold text-white">Next →</button>
+            </div>
+          )}
+        </div>
+      )}
     </Section>
   );
 }
