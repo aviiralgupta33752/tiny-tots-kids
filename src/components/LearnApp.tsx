@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ALPHABET, ANIMALS, COLORS, NUMBERS, SHAPES, TONES, speak, toneClass, type Tone } from "@/lib/learn-data";
+import { ANIMALS, COLORS, SHAPES, TONES, speak, toneClass, type Tone } from "@/lib/learn-data";
 import { StoryTime } from "@/components/StoryTime";
 import { addStars, earnedStickers, useStars, useStreak, useDifficulty, getCurrentLevel, getNextLevel, LEVELS } from "@/lib/rewards";
 import { prewarm } from "@/lib/speak";
@@ -10,71 +10,44 @@ import { AvatarDisplay, AvatarPicker, loadAvatar, type AvatarState } from "@/com
 import { playAnimalSound, stopAllSounds, startBgMusic, stopBgMusic, toggleBgMusic } from "@/lib/audioManager";
 import { ColoringPage } from "@/components/ColoringPage";
 import { SightWordsGame, PhonicsGame, MemoryGame, BodyPartsGame, EmotionsGame, WeatherCalendar } from "@/components/NewGames";
-import {
-  OppositesGame, InstructionsGame, PatternsGame, DaysGame, HelpersGame, SharingGame,
-  BigCountGame, TimeGame, MoneyGame, PlantsGame, SeasonsGame, MapsGame,
-  ComprehensionGame, PlaceValueGame, MeasureGame, LifeCycleGame, SpaceGame, CitizenGame,
-  ParagraphGame, MultiplyGame, FractionsGame, GeographyGame, EcosystemsGame, MatterGame, CodingGame,
-} from "@/components/CurriculumGames";
+import { getTabsForAge } from "@/components/OnboardingPage";
+import type { ChildProfile } from "@/hooks/useAuth";
+import { DailyChallenge } from "@/components/DailyChallenge";
+import { AchievementToast } from "@/components/AchievementToast";
+import { NumberTrace } from "@/components/NumberTrace";
+import { LanguagePicker } from "@/components/LanguagePicker";
+import { ProfileSwitcher, getProfiles, saveProfiles, setActiveProfile } from "@/components/MultiProfile";
+import { getLang, t, ALPHABET_DATA } from "@/lib/i18n";
+import type { Language } from "@/lib/i18n";
+import { checkNewAchievements, getStats } from "@/lib/achievements";
+import type { Achievement } from "@/lib/achievements";
+import { OnboardingPage } from "@/components/OnboardingPage";
 
-type TabKey = "abc"|"123"|"colors"|"shapes"|"animals"|"story"|"spell"|"count"|"math"|"rhyme"|"sight"|"phonics"|"memory"|"body"|"emotions"|"weather"|"trace"|"match"|"quiz"|"color"|"rewards"
-  |"opposites"|"instructions"|"patterns"|"days"|"helpers"|"sharing"
-  |"bigcount"|"time"|"money"|"plants"|"seasons"|"maps"
-  |"comprehension"|"placevalue"|"measure"|"lifecycle"|"space"|"citizen"
-  |"paragraph"|"multiply"|"fractions"|"geography"|"ecosystems"|"matter"|"coding";
+type TabKey = "abc"|"123"|"colors"|"shapes"|"animals"|"story"|"spell"|"count"|"math"|"rhyme"|"sight"|"phonics"|"memory"|"body"|"emotions"|"weather"|"trace"|"numtrace"|"match"|"quiz"|"color"|"rewards";
 
 const TABS: { key: TabKey; label: string; emoji: string }[] = [
-  { key:"abc",      label:"ABCs",        emoji:"🔤" },
-  { key:"123",      label:"123s",        emoji:"🔢" },
-  { key:"colors",   label:"Colors",      emoji:"🎨" },
-  { key:"shapes",   label:"Shapes",      emoji:"⭐" },
-  { key:"animals",  label:"Animals",     emoji:"🐾" },
-  { key:"story",    label:"Stories",     emoji:"📖" },
-  { key:"spell",    label:"Spell It",    emoji:"✍️" },
-  { key:"count",    label:"Counting",    emoji:"🔢" },
-  { key:"math",     label:"Math",        emoji:"➕" },
-  { key:"rhyme",    label:"Rhyme Time",  emoji:"🎵" },
-  { key:"sight",    label:"Sight Words", emoji:"👁️" },
-  { key:"phonics",  label:"Phonics",     emoji:"🔤" },
-  { key:"memory",   label:"Memory",      emoji:"🧩" },
-  { key:"body",     label:"Body Parts",  emoji:"🫀" },
-  { key:"emotions", label:"Emotions",    emoji:"😊" },
-  { key:"weather",  label:"Weather",     emoji:"☀️" },
-  { key:"trace",    label:"Trace",       emoji:"✏️" },
-  { key:"match",    label:"Match",       emoji:"🧩" },
-  { key:"quiz",     label:"Quiz",        emoji:"❓" },
-  { key:"color",    label:"Color!",      emoji:"🖍️" },
-  // Age 3
-  { key:"opposites",   label:"Opposites",     emoji:"↔️" },
-  { key:"instructions",label:"Simon Says",    emoji:"🎯" },
-  // Age 4
-  { key:"patterns",    label:"Patterns",      emoji:"🔁" },
-  { key:"days",        label:"Days",          emoji:"📅" },
-  { key:"helpers",     label:"Helpers",       emoji:"👩‍⚕️" },
-  { key:"sharing",     label:"Sharing",       emoji:"🤝" },
-  // Age 5
-  { key:"bigcount",    label:"1 to 100",      emoji:"💯" },
-  { key:"time",        label:"Telling Time",  emoji:"🕐" },
-  { key:"money",       label:"Money",         emoji:"💰" },
-  { key:"plants",      label:"Plants",        emoji:"🌱" },
-  { key:"seasons",     label:"Seasons",       emoji:"🍂" },
-  { key:"maps",        label:"Maps",          emoji:"🗺️" },
-  // Age 6
-  { key:"comprehension",label:"Read & Think", emoji:"📚" },
-  { key:"placevalue",  label:"Place Value",   emoji:"🔢" },
-  { key:"measure",     label:"Measuring",     emoji:"📏" },
-  { key:"lifecycle",   label:"Life Cycles",   emoji:"🦋" },
-  { key:"space",       label:"Earth & Sky",   emoji:"🌍" },
-  { key:"citizen",     label:"Be Kind",       emoji:"🌟" },
-  // Age 7
-  { key:"paragraph",   label:"Writing",       emoji:"✏️" },
-  { key:"multiply",    label:"Multiply",      emoji:"✖️" },
-  { key:"fractions",   label:"Fractions",     emoji:"½" },
-  { key:"geography",   label:"Countries",     emoji:"🌎" },
-  { key:"ecosystems",  label:"Ecosystems",    emoji:"🌳" },
-  { key:"matter",      label:"Matter",        emoji:"💧" },
-  { key:"coding",      label:"Coding",        emoji:"🤖" },
-  { key:"rewards",  label:"Rewards",     emoji:"🏆" },
+  { key:"abc",      label:"ABCs",           emoji:"🔤" },
+  { key:"123",      label:"123s",           emoji:"🔢" },
+  { key:"colors",   label:"Colors",         emoji:"🎨" },
+  { key:"shapes",   label:"Shapes",         emoji:"⭐" },
+  { key:"animals",  label:"Animals",        emoji:"🐾" },
+  { key:"story",    label:"Stories",        emoji:"📖" },
+  { key:"spell",    label:"Spell It",       emoji:"✍️" },
+  { key:"count",    label:"Counting",       emoji:"🔢" },
+  { key:"math",     label:"Math",           emoji:"➕" },
+  { key:"rhyme",    label:"Rhyme Time",     emoji:"🎵" },
+  { key:"sight",    label:"Sight Words",    emoji:"👁️" },
+  { key:"phonics",  label:"Phonics",        emoji:"🔤" },
+  { key:"memory",   label:"Memory",         emoji:"🧩" },
+  { key:"body",     label:"Body Parts",     emoji:"🫀" },
+  { key:"emotions", label:"Emotions",       emoji:"😊" },
+  { key:"weather",  label:"Weather",        emoji:"☀️" },
+  { key:"trace",    label:"Trace",          emoji:"✏️" },
+  { key:"numtrace", label:"Number Trace",   emoji:"🔢" },
+  { key:"match",    label:"Match",          emoji:"🧩" },
+  { key:"quiz",     label:"Quiz",           emoji:"❓" },
+  { key:"color",    label:"Color!",         emoji:"🖍️" },
+  { key:"rewards",  label:"Rewards",        emoji:"🏆" },
 ];
 
 const CURRICULUM: TabKey[] = ["abc","123","colors","animals","shapes","story","spell","count","math","rhyme","sight","phonics","emotions","body","weather"];
@@ -87,10 +60,15 @@ function getCurriculumTab(): TabKey {
 import { getTabsForAge } from "@/components/OnboardingPage";
 import type { ChildProfile } from "@/hooks/useAuth";
 
-export function LearnApp({ childProfile, onSignOut }: { childProfile: ChildProfile; onSignOut: () => void }) {
-  const allowedTabs = getTabsForAge(childProfile.age);
+export function LearnApp({ childProfile: initialProfile, onSignOut }: { childProfile: ChildProfile; onSignOut: () => void }) {
+  const allowedTabs = getTabsForAge(initialProfile.age);
   const visibleTabs = TABS.filter(t => allowedTabs.includes(t.key));
   const [tab, setTab] = useState<TabKey>((allowedTabs[0] as TabKey) ?? "abc");
+  const [childProfile, setChildProfile] = useState(initialProfile);
+  const [showAddChild, setShowAddChild] = useState(false);
+  const [newAchievements, setNewAchievements] = useState<Achievement[]>([]);
+  const lang = getLang() as Language;
+  const ALPHABET = ALPHABET_DATA[lang] || ALPHABET_DATA["en"];
   const stars = useStars();
   const streak = useStreak();
   const [difficulty, setDifficulty] = useDifficulty();
@@ -137,6 +115,13 @@ export function LearnApp({ childProfile, onSignOut }: { childProfile: ChildProfi
   useEffect(() => () => { if (focusTimer.current) clearInterval(focusTimer.current); }, []);
 
   useEffect(() => {
+    const stats = getStats();
+    const updated = { ...stats, stars, streak };
+    const newOnes = checkNewAchievements(updated);
+    if (newOnes.length > 0) setNewAchievements(prev => [...prev, ...newOnes]);
+  }, [stars, streak]);
+
+  useEffect(() => {
     const req = (window as any).requestIdleCallback ?? ((cb: ()=>void) => setTimeout(cb,300));
     const id = req(() => prewarm(ALPHABET.map(a => `${a.letter} is for ${a.word}.`)));
     return () => ((window as any).cancelIdleCallback ?? clearTimeout)(id);
@@ -145,6 +130,21 @@ export function LearnApp({ childProfile, onSignOut }: { childProfile: ChildProfi
   return (
     <div className="min-h-screen px-4 pb-16 pt-6 sm:px-8">
       {showAvatarPicker && <AvatarPicker onClose={() => { setAvatar(loadAvatar()); setShowAvatarPicker(false); }} />}
+      {showAddChild && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
+          <OnboardingPage onDone={(p) => {
+            const profiles = getProfiles();
+            const updated = [...profiles.filter(x => x.name !== p.name), p];
+            saveProfiles(updated);
+            setActiveProfile(p);
+            setChildProfile(p);
+            setShowAddChild(false);
+          }} />
+        </div>
+      )}
+      {newAchievements.length > 0 && (
+        <AchievementToast achievements={newAchievements} onDone={() => setNewAchievements([])} />
+      )}
 
       {/* Header */}
       <header className="mx-auto mb-4 flex max-w-6xl items-center justify-between gap-3">
@@ -152,8 +152,7 @@ export function LearnApp({ childProfile, onSignOut }: { childProfile: ChildProfi
           <div className="grid h-12 w-12 place-items-center rounded-2xl bg-pink text-2xl shadow-md">🌈</div>
           <div>
             <h1 className="text-2xl font-bold sm:text-3xl">Tiny Tots</h1>
-            <p className="text-xs text-muted-foreground">Hi {childProfile.name}! 👋</p>
-          </div>
+            <p className="text-xs text-muted-foreground">Hi {childProfile.name}! 👋</p>          </div>
         </div>
         <div className="flex items-center gap-2">
           {streak > 0 && (
@@ -165,6 +164,12 @@ export function LearnApp({ childProfile, onSignOut }: { childProfile: ChildProfi
             className="card-soft rounded-full px-3 py-2 text-xs font-bold hover:scale-105 transition bg-muted">
             🚪 Sign out
           </button>
+          <LanguagePicker />
+          <ProfileSwitcher
+            currentProfile={childProfile}
+            onSwitch={setChildProfile}
+            onAddNew={() => setShowAddChild(true)}
+          />
           <button onClick={() => { const on = toggleBgMusic(); setMusicOn(on); }}
             className="card-soft rounded-full px-3 py-2 text-lg font-bold hover:scale-105 transition">
             {musicOn ? "🎵" : "🔇"}
@@ -179,7 +184,10 @@ export function LearnApp({ childProfile, onSignOut }: { childProfile: ChildProfi
         </div>
       </header>
 
-      {/* Focus / Curriculum banner */}
+      {/* Daily Challenge */}
+      <div className="mx-auto mb-3 max-w-6xl">
+        <DailyChallenge onGoToTab={(t) => switchTab(t as TabKey)} />
+      </div>
       <div className="mx-auto mb-3 max-w-6xl">
         {focusMode ? (
           <div className="flex items-center justify-between rounded-2xl bg-lilac/60 px-4 py-2">
@@ -232,7 +240,7 @@ export function LearnApp({ childProfile, onSignOut }: { childProfile: ChildProfi
 
       {/* Content */}
       <main className="mx-auto max-w-6xl">
-        {tab==="abc"      && <AlphabetGrid />}
+        {tab==="abc"      && <AlphabetGrid alphabet={ALPHABET} />}
         {tab==="123"      && <NumberGrid />}
         {tab==="colors"   && <ColorGrid />}
         {tab==="shapes"   && <ShapeGrid />}
@@ -248,35 +256,11 @@ export function LearnApp({ childProfile, onSignOut }: { childProfile: ChildProfi
         {tab==="body"     && <Section title="Body Parts 🫀" subtitle="Tap to learn about your body!"><BodyPartsGame /></Section>}
         {tab==="emotions" && <Section title="Emotions 😊" subtitle="Learn about feelings!"><EmotionsGame /></Section>}
         {tab==="weather"  && <Section title="Weather & Calendar ☀️" subtitle="What day is it today?"><WeatherCalendar /></Section>}
-        {tab==="trace"    && <TracePanel />}
-        {tab==="match"    && <MatchGame />}
-        {tab==="quiz"     && <QuizGame />}
+        {tab==="numtrace" && <NumberTrace />}
+        {tab==="trace"    && <TracePanel alphabet={ALPHABET} />}
+        {tab==="match"    && <MatchGame alphabet={ALPHABET} />}
+        {tab==="quiz"     && <QuizGame alphabet={ALPHABET} />}
         {tab==="color"    && <Section title="Free Time 🖍️" subtitle="Color and draw — it's your art!"><ColoringPage /></Section>}
-        {tab==="opposites"   && <Section title="Opposites ↔️" subtitle="Tap a pair to hear them!"><OppositesGame /></Section>}
-        {tab==="instructions"&& <Section title="Simon Says 🎯" subtitle="Follow the instruction!"><InstructionsGame /></Section>}
-        {tab==="patterns"    && <Section title="Patterns 🔁" subtitle="What comes next?"><PatternsGame /></Section>}
-        {tab==="days"        && <Section title="Days of the Week 📅" subtitle="Learn the 7 days!"><DaysGame /></Section>}
-        {tab==="helpers"     && <Section title="Community Helpers 👩‍⚕️" subtitle="People who help us!"><HelpersGame /></Section>}
-        {tab==="sharing"     && <Section title="Sharing & Teamwork 🤝" subtitle="What's the kind choice?"><SharingGame /></Section>}
-        {tab==="bigcount"    && <Section title="Counting to 100 💯" subtitle="Tap to count!"><BigCountGame /></Section>}
-        {tab==="time"        && <Section title="Telling Time 🕐" subtitle="What time is it?"><TimeGame /></Section>}
-        {tab==="money"       && <Section title="Money & Coins 💰" subtitle="Learn about coins!"><MoneyGame /></Section>}
-        {tab==="plants"      && <Section title="Plants 🌱" subtitle="Discover plants!"><PlantsGame /></Section>}
-        {tab==="seasons"     && <Section title="Seasons 🍂" subtitle="The four seasons!"><SeasonsGame /></Section>}
-        {tab==="maps"        && <Section title="Maps & Directions 🗺️" subtitle="Which way to go?"><MapsGame /></Section>}
-        {tab==="comprehension" && <Section title="Read & Think 📚" subtitle="Read the story, answer the question!"><ComprehensionGame /></Section>}
-        {tab==="placevalue"  && <Section title="Place Value 🔢" subtitle="Hundreds, tens, and ones!"><PlaceValueGame /></Section>}
-        {tab==="measure"     && <Section title="Measuring 📏" subtitle="How big is it?"><MeasureGame /></Section>}
-        {tab==="lifecycle"   && <Section title="Life Cycles 🦋" subtitle="How living things grow!"><LifeCycleGame /></Section>}
-        {tab==="space"       && <Section title="Earth, Moon & Sun 🌍" subtitle="Explore space!"><SpaceGame /></Section>}
-        {tab==="citizen"     && <Section title="Good Citizen 🌟" subtitle="Ways to be kind!"><CitizenGame /></Section>}
-        {tab==="paragraph"   && <Section title="Paragraph Writing ✏️" subtitle="Write your own paragraph!"><ParagraphGame /></Section>}
-        {tab==="multiply"    && <Section title="Multiplication ✖️" subtitle="Solve the problem!"><MultiplyGame /></Section>}
-        {tab==="fractions"   && <Section title="Fractions ½" subtitle="Parts of a whole!"><FractionsGame /></Section>}
-        {tab==="geography"   && <Section title="States & Countries 🌎" subtitle="Places around the world!"><GeographyGame /></Section>}
-        {tab==="ecosystems"  && <Section title="Ecosystems 🌳" subtitle="Where animals live!"><EcosystemsGame /></Section>}
-        {tab==="matter"      && <Section title="Matter 💧" subtitle="Solid, liquid, gas!"><MatterGame /></Section>}
-        {tab==="coding"      && <Section title="Coding & Logic 🤖" subtitle="Program the robot to the star!"><CodingGame /></Section>}
         {tab==="rewards"  && <RewardsPanel stars={stars} streak={streak} avatar={avatar} onEditAvatar={() => setShowAvatarPicker(true)} />}
       </main>
     </div>
@@ -327,11 +311,11 @@ function Tile({ tone, onClick, children, big }: { tone:Tone; onClick:()=>void; c
   );
 }
 
-function AlphabetGrid() {
+function AlphabetGrid({ alphabet }: { alphabet: typeof ALPHABET_DATA["en"] }) {
   return (
     <Section title="The Alphabet" subtitle="Tap a letter to hear it!">
       <div className="grid grid-cols-3 gap-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7">
-        {ALPHABET.map((a,i) => (
+        {alphabet.map((a,i) => (
           <Tile key={a.letter} tone={TONES[i%TONES.length]} onClick={() => speak(`${a.letter} is for ${a.word}`)}>
             <span className="text-5xl font-bold font-display sm:text-6xl">{a.letter}</span>
             <span className="text-3xl">{a.emoji}</span>
@@ -408,7 +392,7 @@ function AnimalGrid() {
   );
 }
 
-function TracePanel() {
+function TracePanel({ alphabet }: { alphabet: typeof ALPHABET_DATA["en"] }) {
   const [letter, setLetter] = useState("A");
   const [isLower, setIsLower] = useState(false);
   const [earned, setEarned] = useState(false);
@@ -493,7 +477,7 @@ function TracePanel() {
         <div className="flex flex-col gap-3">
           <p className="text-sm font-semibold text-muted-foreground">Choose a letter</p>
           <div className="grid max-h-[28rem] w-full grid-cols-6 gap-1.5 overflow-auto md:w-56 md:grid-cols-4">
-            {ALPHABET.map(a => (
+            {alphabet.map(a => (
               <button key={a.letter} onClick={() => { setLetter(a.letter); speak(isLower ? a.letter.toLowerCase() : a.letter); }}
                 className={`rounded-lg py-2 font-display text-lg font-bold transition ${letter===a.letter ? "bg-pink shadow-md scale-105" : "bg-muted hover:bg-accent"}`}>
                 {isLower ? a.letter.toLowerCase() : a.letter}
@@ -506,12 +490,12 @@ function TracePanel() {
   );
 }
 
-function MatchGame() {
+function MatchGame({ alphabet }: { alphabet: typeof ALPHABET_DATA["en"] }) {
   const [round, setRound] = useState(0);
   const [picked, setPicked] = useState<string|null>(null);
   const [correct, setCorrect] = useState(false);
   const set = useRef(rollSet());
-  function rollSet() { const items=[...ALPHABET].sort(()=>Math.random()-.5).slice(0,4); const answer=items[Math.floor(Math.random()*items.length)]; return {items,answer}; }
+  function rollSet() { const items=[...alphabet].sort(()=>Math.random()-.5).slice(0,4); const answer=items[Math.floor(Math.random()*items.length)]; return {items,answer}; }
   function sayPrompt() { speak(`Can you find the letter ${set.current.answer.letter}? Tap it!`); }
   useEffect(() => { setTimeout(sayPrompt, 500); }, [round]);
   function next() { set.current=rollSet(); setPicked(null); setCorrect(false); setRound(r=>r+1); }
@@ -535,12 +519,12 @@ function MatchGame() {
   );
 }
 
-function QuizGame() {
+function QuizGame({ alphabet }: { alphabet: typeof ALPHABET_DATA["en"] }) {
   const [score, setScore] = useState(0);
   const [round, setRound] = useState(0);
   const [picked, setPicked] = useState<string|null>(null);
   const q = useRef(rollQ());
-  function rollQ() { const items=[...ALPHABET].sort(()=>Math.random()-.5).slice(0,4); const answer=items[Math.floor(Math.random()*items.length)]; return {items,answer}; }
+  function rollQ() { const items=[...alphabet].sort(()=>Math.random()-.5).slice(0,4); const answer=items[Math.floor(Math.random()*items.length)]; return {items,answer}; }
   const SWEET = ["So close! You're doing amazing! 🌟","Great try! Keep going superstar! ⭐","You're learning so fast! Try again! 🎉","Wow you're so brave for trying! 💪"];
   function pick(word: string) {
     if (picked) return; setPicked(word);
