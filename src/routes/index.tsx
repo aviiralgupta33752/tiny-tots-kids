@@ -43,7 +43,7 @@ function Index() {
 
 function LandingPage() {
   const [showAuth, setShowAuth] = useState(false);
-  const [mode, setMode] = useState<"login" | "signup">("signup");
+  const [mode, setMode] = useState<"login" | "signup" | "forgot">("signup");
 
   function openSignup() { setMode("signup"); setShowAuth(true); }
   function openLogin() { setMode("login"); setShowAuth(true); }
@@ -170,7 +170,7 @@ function LandingPage() {
 }
 
 // ── Auth Modal ────────────────────────────────────────────────────────────────
-function AuthModal({ mode, setMode, onClose }: { mode: "login"|"signup"; setMode: (m: "login"|"signup") => void; onClose: () => void }) {
+function AuthModal({ mode, setMode, onClose }: { mode: "login"|"signup"|"forgot"; setMode: (m: "login"|"signup"|"forgot") => void; onClose: () => void }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -186,6 +186,12 @@ function AuthModal({ mode, setMode, onClose }: { mode: "login"|"signup"; setMode
         const { error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: name } } });
         if (error) throw error;
         setMessage("Account created! Setting up your child's profile...");
+      } else if (mode === "forgot") {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/`,
+        });
+        if (error) throw error;
+        setMessage("Check your email for a password reset link!");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -204,10 +210,12 @@ function AuthModal({ mode, setMode, onClose }: { mode: "login"|"signup"; setMode
         <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
           <div style={{ fontSize: "3rem" }}>🌈</div>
           <h2 style={{ fontFamily: "'Fredoka One',cursive", fontSize: "1.8rem", margin: ".3rem 0" }}>
-            {mode === "login" ? "Welcome Back! 👋" : "Join Tiny Tots! 🌟"}
+            {mode === "login" ? "Welcome Back! 👋" : mode === "signup" ? "Join Tiny Tots! 🌟" : "Reset Password 🔑"}
           </h2>
           <p style={{ color: "#888", fontSize: ".9rem" }}>
-            {mode === "login" ? "Sign in to continue your child's learning" : "Create a free parent account"}
+            {mode === "login" ? "Sign in to continue your child's learning"
+              : mode === "signup" ? "Create a free parent account"
+              : "We'll email you a link to reset your password"}
           </p>
         </div>
 
@@ -217,29 +225,50 @@ function AuthModal({ mode, setMode, onClose }: { mode: "login"|"signup"; setMode
         )}
         <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Email address" type="email"
           onKeyDown={e => e.key === "Enter" && handleSubmit()} style={inputStyle} />
-        <div style={{ position: "relative", marginBottom: "1.5rem" }}>
-          <input value={password} onChange={e => setPassword(e.target.value)} placeholder="Password"
-            type={showPassword ? "text" : "password"} onKeyDown={e => e.key === "Enter" && handleSubmit()}
-            style={{ ...inputStyle, marginBottom: 0, paddingRight: "3rem" }} />
-          <button type="button" onClick={() => setShowPassword(!showPassword)}
-            style={{ position: "absolute", right: "1rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer" }}>
-            {showPassword ? "🙈" : "👁️"}
-          </button>
-        </div>
+        {mode !== "forgot" && (
+          <div style={{ position: "relative", marginBottom: "0.5rem" }}>
+            <input value={password} onChange={e => setPassword(e.target.value)} placeholder="Password"
+              type={showPassword ? "text" : "password"} onKeyDown={e => e.key === "Enter" && handleSubmit()}
+              style={{ ...inputStyle, marginBottom: 0, paddingRight: "3rem" }} />
+            <button type="button" onClick={() => setShowPassword(!showPassword)}
+              style={{ position: "absolute", right: "1rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer" }}>
+              {showPassword ? "🙈" : "👁️"}
+            </button>
+          </div>
+        )}
+
+        {mode === "login" && (
+          <div style={{ textAlign: "right", marginBottom: "1rem", marginTop: "0.5rem" }}>
+            <button onClick={() => { setMode("forgot"); setError(""); setMessage(""); }}
+              style={{ background: "none", border: "none", color: "#ff8fab", fontWeight: 800, cursor: "pointer", fontSize: ".85rem" }}>
+              Forgot password?
+            </button>
+          </div>
+        )}
+        {mode !== "login" && <div style={{ marginBottom: "1.5rem" }} />}
 
         {error && <p style={{ color: "red", fontSize: ".85rem", textAlign: "center", marginBottom: ".75rem" }}>{error}</p>}
         {message && <p style={{ color: "green", fontSize: ".85rem", textAlign: "center", marginBottom: ".75rem" }}>{message}</p>}
 
         <button onClick={handleSubmit} disabled={loading} style={{ ...pinkBtn, width: "100%", justifyContent: "center", fontSize: "1.1rem", padding: "1rem", marginBottom: "1rem" }}>
-          {loading ? "..." : mode === "login" ? "Log In" : "Create Account"}
+          {loading ? "..." : mode === "login" ? "Log In" : mode === "signup" ? "Create Account" : "Send Reset Link"}
         </button>
 
         <p style={{ textAlign: "center", fontSize: ".9rem", color: "#666" }}>
-          {mode === "login" ? "Don't have an account? " : "Already have an account? "}
-          <button onClick={() => { setMode(mode === "login" ? "signup" : "login"); setError(""); setMessage(""); }}
-            style={{ background: "none", border: "none", color: "#ff8fab", fontWeight: 800, cursor: "pointer", fontSize: ".9rem" }}>
-            {mode === "login" ? "Sign up free" : "Log in"}
-          </button>
+          {mode === "forgot" ? (
+            <button onClick={() => { setMode("login"); setError(""); setMessage(""); }}
+              style={{ background: "none", border: "none", color: "#ff8fab", fontWeight: 800, cursor: "pointer", fontSize: ".9rem" }}>
+              ← Back to log in
+            </button>
+          ) : (
+            <>
+              {mode === "login" ? "Don't have an account? " : "Already have an account? "}
+              <button onClick={() => { setMode(mode === "login" ? "signup" : "login"); setError(""); setMessage(""); }}
+                style={{ background: "none", border: "none", color: "#ff8fab", fontWeight: 800, cursor: "pointer", fontSize: ".9rem" }}>
+                {mode === "login" ? "Sign up free" : "Log in"}
+              </button>
+            </>
+          )}
         </p>
       </div>
     </div>
