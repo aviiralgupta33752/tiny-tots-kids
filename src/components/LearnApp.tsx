@@ -22,6 +22,7 @@ import type { Language } from "@/lib/i18n";
 import { checkNewAchievements, getStats } from "@/lib/achievements";
 import type { Achievement } from "@/lib/achievements";
 import { OnboardingPage } from "@/components/OnboardingPage";
+import { useBedtimeMode, BedtimeToggle, BedtimeOverlay } from "@/components/BedtimeMode";
 
 type TabKey = "abc"|"123"|"colors"|"shapes"|"animals"|"story"|"spell"|"count"|"math"|"rhyme"|"sight"|"phonics"|"memory"|"body"|"emotions"|"weather"|"trace"|"numtrace"|"match"|"quiz"|"color"|"rewards";
 
@@ -57,9 +58,6 @@ function getCurriculumTab(): TabKey {
   return CURRICULUM[slot % CURRICULUM.length];
 }
 
-import { getTabsForAge } from "@/components/OnboardingPage";
-import type { ChildProfile } from "@/hooks/useAuth";
-
 export function LearnApp({ childProfile: initialProfile, onSignOut }: { childProfile: ChildProfile; onSignOut: () => void }) {
   const allowedTabs = getTabsForAge(initialProfile.age);
   const visibleTabs = TABS.filter(t => allowedTabs.includes(t.key));
@@ -69,6 +67,7 @@ export function LearnApp({ childProfile: initialProfile, onSignOut }: { childPro
   const [newAchievements, setNewAchievements] = useState<Achievement[]>([]);
   const lang = getLang() as Language;
   const ALPHABET = ALPHABET_DATA[lang] || ALPHABET_DATA["en"];
+  const [bedtimeActive, bedtimePref, setBedtimePref] = useBedtimeMode();
   const stars = useStars();
   const streak = useStreak();
   const [difficulty, setDifficulty] = useDifficulty();
@@ -108,9 +107,10 @@ export function LearnApp({ childProfile: initialProfile, onSignOut }: { childPro
   }, []);
 
   useEffect(() => {
-    startBgMusic();
+    if (!musicOn) return;
+    startBgMusic({ calm: bedtimeActive, volume: bedtimeActive ? 0.035 : 0.05 });
     return () => stopBgMusic();
-  }, []);
+  }, [bedtimeActive]);
 
   useEffect(() => () => { if (focusTimer.current) clearInterval(focusTimer.current); }, []);
 
@@ -128,7 +128,9 @@ export function LearnApp({ childProfile: initialProfile, onSignOut }: { childPro
   }, []);
 
   return (
-    <div className="min-h-screen px-4 pb-16 pt-6 sm:px-8">
+    <div className={`min-h-screen px-4 pb-16 pt-6 sm:px-8 relative transition-colors duration-700 ${bedtimeActive ? "bedtime-mode" : ""}`}
+      style={bedtimeActive ? { background: "linear-gradient(160deg, #1a1a3a 0%, #2d2654 50%, #1f1b3d 100%)" } : undefined}>
+      {bedtimeActive && <BedtimeOverlay />}
       {showAvatarPicker && <AvatarPicker onClose={() => { setAvatar(loadAvatar()); setShowAvatarPicker(false); }} />}
       {showAddChild && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
@@ -147,12 +149,15 @@ export function LearnApp({ childProfile: initialProfile, onSignOut }: { childPro
       )}
 
       {/* Header */}
-      <header className="mx-auto mb-4 flex max-w-6xl items-center justify-between gap-3">
+      <header className="mx-auto mb-4 flex max-w-6xl items-center justify-between gap-3 relative z-10">
         <div className="flex items-center gap-3">
-          <div className="grid h-12 w-12 place-items-center rounded-2xl bg-pink text-2xl shadow-md">🌈</div>
+          <div className="grid h-12 w-12 place-items-center rounded-2xl bg-pink text-2xl shadow-md">{bedtimeActive ? "🌙" : "🌈"}</div>
           <div>
-            <h1 className="text-2xl font-bold sm:text-3xl">Tiny Tots</h1>
-            <p className="text-xs text-muted-foreground">Hi {childProfile.name}! 👋</p>          </div>
+            <h1 className={`text-2xl font-bold sm:text-3xl ${bedtimeActive ? "text-white" : ""}`}>Tiny Tots</h1>
+            <p className={`text-xs ${bedtimeActive ? "text-white/70" : "text-muted-foreground"}`}>
+              {bedtimeActive ? `Sweet dreams, ${childProfile.name}! 🌙` : `Hi ${childProfile.name}! 👋`}
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           {streak > 0 && (
@@ -165,12 +170,13 @@ export function LearnApp({ childProfile: initialProfile, onSignOut }: { childPro
             🚪 Sign out
           </button>
           <LanguagePicker />
+          <BedtimeToggle pref={bedtimePref} onChange={setBedtimePref} />
           <ProfileSwitcher
             currentProfile={childProfile}
             onSwitch={setChildProfile}
             onAddNew={() => setShowAddChild(true)}
           />
-          <button onClick={() => { const on = toggleBgMusic(); setMusicOn(on); }}
+          <button onClick={() => { const on = !musicOn; setMusicOn(on); if (on) startBgMusic({ calm: bedtimeActive, volume: bedtimeActive ? 0.035 : 0.05 }); else stopBgMusic(); }}
             className="card-soft rounded-full px-3 py-2 text-lg font-bold hover:scale-105 transition">
             {musicOn ? "🎵" : "🔇"}
           </button>
@@ -225,7 +231,7 @@ export function LearnApp({ childProfile: initialProfile, onSignOut }: { childPro
       </div>
 
       {/* Nav */}
-      <nav className="mx-auto mb-8 max-w-6xl">
+      <nav className="mx-auto mb-8 max-w-6xl relative z-10">
         <div className="card-soft flex flex-wrap gap-2 p-2">
           {visibleTabs.map(t => (
             <button key={t.key} onClick={() => switchTab(t.key)}
@@ -239,7 +245,7 @@ export function LearnApp({ childProfile: initialProfile, onSignOut }: { childPro
       </nav>
 
       {/* Content */}
-      <main className="mx-auto max-w-6xl">
+      <main className="mx-auto max-w-6xl relative z-10">
         {tab==="abc"      && <AlphabetGrid alphabet={ALPHABET} />}
         {tab==="123"      && <NumberGrid />}
         {tab==="colors"   && <ColorGrid />}
