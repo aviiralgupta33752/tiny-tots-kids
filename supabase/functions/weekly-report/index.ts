@@ -1,3 +1,4 @@
+
 // Supabase Edge Function: weekly-report
 // Sends a weekly progress report email to every parent who has a child profile,
 // using stats synced to user_metadata by the app (see syncStatsToSupabase.ts).
@@ -86,63 +87,32 @@ function buildReportHtml(childName: string, stats: any): string {
 
   const rowsHtml = rows.map(([label, value]) => `
     <tr>
-      <td style="padding:12px 16px;border-bottom:1px solid #f3e8ff;">${label}</td>
-      <td style="padding:12px 16px;border-bottom:1px solid #f3e8ff;text-align:right;font-weight:700;">${value}</td>
+      <td style="padding:10px 0;font-size:15px;color:#444;">${label}</td>
+      <td style="padding:10px 0;font-size:15px;font-weight:700;text-align:right;color:#ff8fab;">${value}</td>
     </tr>
   `).join("");
 
   return `
-  <!DOCTYPE html>
-  <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>${childName}'s Weekly Report</title>
-  </head>
-  <body style="margin:0;padding:0;background:#f8fafc;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-      <tr>
-        <td align="center" style="padding:40px 16px;">
-          <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 10px 25px rgba(0,0,0,0.06);max-width:600px;width:100%;">
-            <!-- Header -->
-            <tr>
-              <td style="background:linear-gradient(135deg,#7c3aed,#ec4899);padding:40px 32px;text-align:center;color:#ffffff;">
-                <h1 style="margin:0;font-size:28px;letter-spacing:-0.5px;">🌈 Tiny Tots</h1>
-                <p style="margin:8px 0 0;font-size:16px;opacity:0.92;">${childName}'s Weekly Report</p>
-              </td>
-            </tr>
-            <!-- Stats -->
-            <tr>
-              <td style="padding:32px;">
-                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
-                  <tbody>
-                    ${rowsHtml}
-                  </tbody>
-                </table>
-              </td>
-            </tr>
-            <!-- Message -->
-            <tr>
-              <td style="padding:0 32px 32px;text-align:center;color:#475569;font-size:15px;line-height:1.6;">
-                <p>Great work this week, ${childName}! Keep practicing every day to earn more stars and unlock new badges. 🎉</p>
-              </td>
-            </tr>
-            <!-- CTA -->
-            <tr>
-              <td style="padding:0 32px 32px;text-align:center;">
-                <a href="https://tiny-tots-kids.lovable.app" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#ec4899);color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:999px;font-weight:600;font-size:15px;">Open Tiny Tots →</a>
-              </td>
-            </tr>
-            <!-- Footer -->
-            <tr>
-              <td style="padding:24px 32px;background:#f8fafc;text-align:center;color:#94a3b8;font-size:12px;">
-                <p style="margin:0;">You're receiving this because you signed up for Tiny Tots. No ads, no spam — just your child's progress.</p>
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-    </table>
-  </body>
-  </html>
+  <div style="font-family:'Nunito',Arial,sans-serif;max-width:480px;margin:0 auto;background:#fffbf5;padding:32px;border-radius:24px;">
+    <div style="text-align:center;margin-bottom:24px;">
+      <div style="font-size:40px;">🌈</div>
+      <h1 style="color:#ff8fab;font-size:24px;margin:8px 0 0;">Tiny Tots</h1>
+      <p style="color:#888;font-size:14px;margin:4px 0 0;">${childName}'s Weekly Report</p>
+    </div>
+    <div style="background:white;border-radius:16px;padding:20px 24px;margin-bottom:20px;">
+      <table style="width:100%;border-collapse:collapse;">
+        ${rowsHtml}
+      </table>
+    </div>
+    <p style="text-align:center;color:#666;font-size:14px;line-height:1.6;">
+      Great work this week, ${childName}! Keep practicing every day to earn more stars and unlock new badges. 🎉
+    </p>
+    <div style="text-align:center;margin-top:24px;">
+      <a href="https://tiny-tots-kids.lovable.app" style="background:#ff8fab;color:white;text-decoration:none;padding:12px 28px;border-radius:999px;font-weight:700;font-size:14px;">Open Tiny Tots →</a>
+    </div>
+    <p style="text-align:center;color:#aaa;font-size:11px;margin-top:24px;">
+      You're receiving this because you signed up for Tiny Tots. No ads, no spam — just your child's progress.
+    </p>
+  </div>
   `;
 }
