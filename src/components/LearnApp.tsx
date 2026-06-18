@@ -25,8 +25,9 @@ import { OnboardingPage } from "@/components/OnboardingPage";
 import { useBedtimeMode, BedtimeToggle, BedtimeOverlay } from "@/components/BedtimeMode";
 import { ProgressDashboard } from "@/components/ProgressDashboard";
 import { SentenceGame } from "@/components/SentenceGame";
+import { SongPlayer } from "@/components/SongPlayer";
 
-type TabKey = "abc"|"123"|"colors"|"shapes"|"animals"|"story"|"spell"|"count"|"math"|"rhyme"|"sight"|"phonics"|"memory"|"body"|"emotions"|"weather"|"trace"|"numtrace"|"sentence"|"match"|"quiz"|"color"|"rewards"|"progress"|"worksheets";
+type TabKey = "abc"|"123"|"colors"|"shapes"|"animals"|"story"|"spell"|"count"|"math"|"rhyme"|"sight"|"phonics"|"memory"|"body"|"emotions"|"weather"|"trace"|"numtrace"|"sentence"|"songs"|"match"|"quiz"|"color"|"rewards"|"progress"|"worksheets";
 
 const TABS: { key: TabKey; label: string; emoji: string }[] = [
   { key:"abc",      label:"ABCs",           emoji:"🔤" },
@@ -48,6 +49,7 @@ const TABS: { key: TabKey; label: string; emoji: string }[] = [
   { key:"trace",    label:"Trace",          emoji:"✏️" },
   { key:"numtrace", label:"Number Trace",   emoji:"🔢" },
   { key:"sentence", label:"Sentences",      emoji:"📝" },
+  { key:"songs",    label:"Songs",          emoji:"🎶" },
   { key:"match",    label:"Match",          emoji:"🧩" },
   { key:"quiz",     label:"Quiz",           emoji:"❓" },
   { key:"color",    label:"Color!",         emoji:"🖍️" },
@@ -269,6 +271,7 @@ export function LearnApp({ childProfile: initialProfile, onSignOut }: { childPro
         {tab==="weather"  && <Section title="Weather & Calendar ☀️" subtitle="What day is it today?"><WeatherCalendar /></Section>}
         {tab==="numtrace" && <NumberTrace />}
         {tab==="sentence" && <Section title="Build a Sentence 📝" subtitle="Tap the words in order!"><SentenceGame difficulty={difficulty} /></Section>}
+        {tab==="songs"    && <Section title="Sing Along! 🎶" subtitle="Learn with music!"><SongPlayer /></Section>}
         {tab==="trace"    && <TracePanel alphabet={ALPHABET} />}
         {tab==="match"    && <MatchGame alphabet={ALPHABET} />}
         {tab==="quiz"     && <QuizGame alphabet={ALPHABET} />}
@@ -287,6 +290,7 @@ function WorksheetsPanel() {
     { name: "Number Tracing (1-10)", emoji: "🔢", file: "/number-tracing-worksheet.pdf", desc: "Practice writing numbers one through ten" },
     { name: "Spelling Practice List", emoji: "✍️", file: "/spelling-practice-worksheet.pdf", desc: "Easy, medium and hard words to write 3 times each" },
     { name: "Coloring Page", emoji: "🎨", file: "/coloring-worksheet.pdf", desc: "Sun, star, flower and house to color in!" },
+    { name: "Animal Coloring Page", emoji: "🐶", file: "/coloring-worksheet-animals.pdf", desc: "Dog, cat and penguin to color in!" },
   ];
 
   return (
