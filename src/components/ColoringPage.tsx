@@ -143,6 +143,28 @@ const IMAGES = [
       { type: "path", props: { d:"M88,110 Q100,120 112,110", fill:"none", stroke:"#333", strokeWidth:2 } },
     ],
   },
+  {
+    name: "Penguin 🐧",
+    viewBox: "0 0 200 200",
+    elements: [
+      // body outline
+      { type: "path", props: { d:"M60,130 C55,160 70,185 100,188 C130,185 145,160 140,130 C140,105 60,105 60,130 Z", fill:"none", stroke:"#333", strokeWidth:3 } },
+      // belly
+      { type: "ellipse", props: { cx:100, cy:148, rx:24, ry:32, fill:"none", stroke:"#333", strokeWidth:2.5 } },
+      // eyes
+      { type: "circle", props: { cx:90, cy:120, r:5, fill:"#333", stroke:"#333", strokeWidth:1 } },
+      { type: "circle", props: { cx:110, cy:120, r:5, fill:"#333", stroke:"#333", strokeWidth:1 } },
+      // beak
+      { type: "polygon", props: { points:"92,130 108,130 100,140", fill:"none", stroke:"#333", strokeWidth:2 } },
+      // left wing
+      { type: "path", props: { d:"M60,140 C45,145 42,165 58,170", fill:"none", stroke:"#333", strokeWidth:2.5 } },
+      // right wing
+      { type: "path", props: { d:"M140,140 C155,145 158,165 142,170", fill:"none", stroke:"#333", strokeWidth:2.5 } },
+      // feet
+      { type: "polygon", props: { points:"82,186 75,196 90,196 92,186", fill:"none", stroke:"#333", strokeWidth:2 } },
+      { type: "polygon", props: { points:"108,186 110,196 125,196 118,186", fill:"none", stroke:"#333", strokeWidth:2 } },
+    ],
+  },
 ];
 
 function renderElement(el: any, idx: number) {
