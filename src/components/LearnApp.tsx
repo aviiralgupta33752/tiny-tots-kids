@@ -23,8 +23,10 @@ import { checkNewAchievements, getStats } from "@/lib/achievements";
 import type { Achievement } from "@/lib/achievements";
 import { OnboardingPage } from "@/components/OnboardingPage";
 import { useBedtimeMode, BedtimeToggle, BedtimeOverlay } from "@/components/BedtimeMode";
+import { ProgressDashboard } from "@/components/ProgressDashboard";
+import { SentenceGame } from "@/components/SentenceGame";
 
-type TabKey = "abc"|"123"|"colors"|"shapes"|"animals"|"story"|"spell"|"count"|"math"|"rhyme"|"sight"|"phonics"|"memory"|"body"|"emotions"|"weather"|"trace"|"numtrace"|"match"|"quiz"|"color"|"rewards";
+type TabKey = "abc"|"123"|"colors"|"shapes"|"animals"|"story"|"spell"|"count"|"math"|"rhyme"|"sight"|"phonics"|"memory"|"body"|"emotions"|"weather"|"trace"|"numtrace"|"sentence"|"match"|"quiz"|"color"|"rewards"|"progress"|"worksheets";
 
 const TABS: { key: TabKey; label: string; emoji: string }[] = [
   { key:"abc",      label:"ABCs",           emoji:"🔤" },
@@ -45,10 +47,13 @@ const TABS: { key: TabKey; label: string; emoji: string }[] = [
   { key:"weather",  label:"Weather",        emoji:"☀️" },
   { key:"trace",    label:"Trace",          emoji:"✏️" },
   { key:"numtrace", label:"Number Trace",   emoji:"🔢" },
+  { key:"sentence", label:"Sentences",      emoji:"📝" },
   { key:"match",    label:"Match",          emoji:"🧩" },
   { key:"quiz",     label:"Quiz",           emoji:"❓" },
   { key:"color",    label:"Color!",         emoji:"🖍️" },
   { key:"rewards",  label:"Rewards",        emoji:"🏆" },
+  { key:"progress", label:"Progress",       emoji:"📊" },
+  { key:"worksheets", label:"Worksheets",   emoji:"🖨️" },
 ];
 
 const CURRICULUM: TabKey[] = ["abc","123","colors","animals","shapes","story","spell","count","math","rhyme","sight","phonics","emotions","body","weather"];
@@ -263,13 +268,46 @@ export function LearnApp({ childProfile: initialProfile, onSignOut }: { childPro
         {tab==="emotions" && <Section title="Emotions 😊" subtitle="Learn about feelings!"><EmotionsGame /></Section>}
         {tab==="weather"  && <Section title="Weather & Calendar ☀️" subtitle="What day is it today?"><WeatherCalendar /></Section>}
         {tab==="numtrace" && <NumberTrace />}
+        {tab==="sentence" && <Section title="Build a Sentence 📝" subtitle="Tap the words in order!"><SentenceGame difficulty={difficulty} /></Section>}
         {tab==="trace"    && <TracePanel alphabet={ALPHABET} />}
         {tab==="match"    && <MatchGame alphabet={ALPHABET} />}
         {tab==="quiz"     && <QuizGame alphabet={ALPHABET} />}
         {tab==="color"    && <Section title="Free Time 🖍️" subtitle="Color and draw — it's your art!"><ColoringPage /></Section>}
         {tab==="rewards"  && <RewardsPanel stars={stars} streak={streak} avatar={avatar} onEditAvatar={() => setShowAvatarPicker(true)} />}
+        {tab==="progress" && <Section title="Progress 📊" subtitle="See everything your child has learned!"><ProgressDashboard childName={childProfile.name} stars={stars} streak={streak} /></Section>}
+        {tab==="worksheets" && <WorksheetsPanel />}
       </main>
     </div>
+  );
+}
+
+function WorksheetsPanel() {
+  const worksheets = [
+    { name: "Letter Tracing (A-Z)", emoji: "🔤", file: "/letter-tracing-worksheet.pdf", desc: "Practice writing every uppercase and lowercase letter" },
+    { name: "Number Tracing (1-10)", emoji: "🔢", file: "/number-tracing-worksheet.pdf", desc: "Practice writing numbers one through ten" },
+    { name: "Spelling Practice List", emoji: "✍️", file: "/spelling-practice-worksheet.pdf", desc: "Easy, medium and hard words to write 3 times each" },
+    { name: "Coloring Page", emoji: "🎨", file: "/coloring-worksheet.pdf", desc: "Sun, star, flower and house to color in!" },
+  ];
+
+  return (
+    <Section title="Printable Worksheets 🖨️" subtitle="Download and print these at home!">
+      <div className="grid gap-4 sm:grid-cols-2 max-w-2xl mx-auto">
+        {worksheets.map(w => (
+          <a key={w.file} href={w.file} download target="_blank" rel="noopener noreferrer"
+            className="card-soft rounded-2xl p-5 flex items-center gap-4 hover:scale-105 transition">
+            <div className="text-4xl">{w.emoji}</div>
+            <div className="flex-1">
+              <div className="font-bold">{w.name}</div>
+              <div className="text-xs text-muted-foreground">{w.desc}</div>
+            </div>
+            <div className="text-pink font-bold text-sm">⬇️</div>
+          </a>
+        ))}
+      </div>
+      <p className="text-center text-sm text-muted-foreground mt-4">
+        Tip: print on regular paper, then use crayons, markers or pencils!
+      </p>
+    </Section>
   );
 }
 
