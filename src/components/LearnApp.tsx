@@ -26,6 +26,7 @@ import { useBedtimeMode, BedtimeToggle, BedtimeOverlay } from "@/components/Bedt
 import { ProgressDashboard } from "@/components/ProgressDashboard";
 import { SentenceGame } from "@/components/SentenceGame";
 import { SongPlayer } from "@/components/SongPlayer";
+import { syncStatsToSupabase } from "@/lib/syncStatsToSupabase";
 
 type TabKey = "abc"|"123"|"colors"|"shapes"|"animals"|"story"|"spell"|"count"|"math"|"rhyme"|"sight"|"phonics"|"memory"|"body"|"emotions"|"weather"|"trace"|"numtrace"|"sentence"|"songs"|"match"|"quiz"|"color"|"rewards"|"progress"|"worksheets";
 
@@ -127,6 +128,13 @@ export function LearnApp({ childProfile: initialProfile, onSignOut }: { childPro
     const newOnes = checkNewAchievements(updated);
     if (newOnes.length > 0) setNewAchievements(prev => [...prev, ...newOnes]);
   }, [stars, streak]);
+
+  useEffect(() => {
+    // Sync stats to Supabase every 2 minutes so the weekly report email has fresh data
+    syncStatsToSupabase(childProfile.name, stars, streak);
+    const id = setInterval(() => syncStatsToSupabase(childProfile.name, stars, streak), 2 * 60_000);
+    return () => clearInterval(id);
+  }, [childProfile.name, stars, streak]);
 
   useEffect(() => {
     const req = (window as any).requestIdleCallback ?? ((cb: ()=>void) => setTimeout(cb,300));
