@@ -31,7 +31,7 @@ function Index() {
   }
 
   if (user && childProfile) {
-    return <LearnApp childProfile={childProfile} onSignOut={signOut} />;
+    return <LearnApp childProfile={childProfile} onSignOut={signOut} userEmail={user?.email} />;
   }
 
   if (user && !childProfile) {
@@ -180,10 +180,23 @@ function AuthModal({ mode, setMode, onClose }: { mode: "login"|"signup"|"forgot"
   const [showPassword, setShowPassword] = useState(false);
 
   async function handleSubmit() {
-    setError(""); setMessage(""); setLoading(true);
+    setError(""); setMessage("");
+    if (mode === "signup" && !name.trim()) {
+      setError("Please enter your name");
+      return;
+    }
+    if (!email.trim()) {
+      setError("Please enter your email");
+      return;
+    }
+    if (mode !== "forgot" && !password.trim()) {
+      setError("Please enter your password");
+      return;
+    }
+    setLoading(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: name } } });
+        const { error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: name.trim() } } });
         if (error) throw error;
         setMessage("Account created! Setting up your child's profile...");
       } else if (mode === "forgot") {
