@@ -14,12 +14,25 @@ export function AuthPage({ onAuth }: { onAuth: () => void }) {
   const [showPassword, setShowPassword] = useState(false);
 
   async function handleSubmit() {
-    setError(""); setMessage(""); setLoading(true);
+    setError(""); setMessage("");
+    if (mode === "signup" && !name.trim()) {
+      setError("Please enter your name");
+      return;
+    }
+    if (!email.trim()) {
+      setError("Please enter your email");
+      return;
+    }
+    if (mode !== "forgot" && !password.trim()) {
+      setError("Please enter your password");
+      return;
+    }
+    setLoading(true);
     try {
       if (mode === "signup") {
         const { error } = await supabase.auth.signUp({
           email, password,
-          options: { data: { full_name: name } }
+          options: { data: { full_name: name.trim() } }
         });
         if (error) throw error;
         setMessage("Check your email to confirm your account!");
