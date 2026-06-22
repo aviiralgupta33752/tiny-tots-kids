@@ -26,9 +26,10 @@ import { useBedtimeMode, BedtimeToggle, BedtimeOverlay } from "@/components/Bedt
 import { ProgressDashboard } from "@/components/ProgressDashboard";
 import { SentenceGame } from "@/components/SentenceGame";
 import { SongPlayer } from "@/components/SongPlayer";
+import { OppositesGame } from "@/components/OppositesGame";
 import { syncStatsToSupabase } from "@/lib/syncStatsToSupabase";
 
-type TabKey = "abc"|"123"|"colors"|"shapes"|"animals"|"story"|"spell"|"count"|"math"|"rhyme"|"sight"|"phonics"|"memory"|"body"|"emotions"|"weather"|"trace"|"numtrace"|"sentence"|"songs"|"match"|"quiz"|"color"|"rewards"|"progress"|"worksheets";
+type TabKey = "abc"|"123"|"colors"|"shapes"|"animals"|"story"|"spell"|"count"|"math"|"rhyme"|"sight"|"phonics"|"memory"|"body"|"emotions"|"weather"|"trace"|"numtrace"|"sentence"|"songs"|"opposites"|"match"|"quiz"|"color"|"rewards"|"progress"|"worksheets";
 
 const TABS: { key: TabKey; label: string; emoji: string }[] = [
   { key:"abc",      label:"ABCs",           emoji:"🔤" },
@@ -51,6 +52,7 @@ const TABS: { key: TabKey; label: string; emoji: string }[] = [
   { key:"numtrace", label:"Number Trace",   emoji:"🔢" },
   { key:"sentence", label:"Sentences",      emoji:"📝" },
   { key:"songs",    label:"Songs",          emoji:"🎶" },
+  { key:"opposites",label:"Opposites",      emoji:"↔️" },
   { key:"match",    label:"Match",          emoji:"🧩" },
   { key:"quiz",     label:"Quiz",           emoji:"❓" },
   { key:"color",    label:"Color!",         emoji:"🖍️" },
@@ -66,8 +68,13 @@ function getCurriculumTab(): TabKey {
   return CURRICULUM[slot % CURRICULUM.length];
 }
 
-export function LearnApp({ childProfile: initialProfile, onSignOut }: { childProfile: ChildProfile; onSignOut: () => void }) {
-  const allowedTabs = getTabsForAge(initialProfile.age);
+const ADMIN_EMAIL = "avigupta2772@gmail.com";
+
+export function LearnApp({ childProfile: initialProfile, onSignOut, userEmail }: { childProfile: ChildProfile; onSignOut: () => void; userEmail?: string }) {
+  const isAdmin = userEmail === ADMIN_EMAIL;
+  const [devAgeOverride, setDevAgeOverride] = useState<number | null>(null);
+  const effectiveAge = devAgeOverride ?? initialProfile.age;
+  const allowedTabs = getTabsForAge(effectiveAge);
   const visibleTabs = TABS.filter(t => allowedTabs.includes(t.key));
   const [tab, setTab] = useState<TabKey>((allowedTabs[0] as TabKey) ?? "abc");
   const [childProfile, setChildProfile] = useState(initialProfile);
@@ -123,6 +130,13 @@ export function LearnApp({ childProfile: initialProfile, onSignOut }: { childPro
   useEffect(() => () => { if (focusTimer.current) clearInterval(focusTimer.current); }, []);
 
   useEffect(() => {
+    // When the dev age override changes, jump to a tab that's valid for that age
+    if (!allowedTabs.includes(tab)) {
+      setTab((allowedTabs[0] as TabKey) ?? "abc");
+    }
+  }, [devAgeOverride]);
+
+  useEffect(() => {
     const stats = getStats();
     const updated = { ...stats, stars, streak };
     const newOnes = checkNewAchievements(updated);
@@ -173,6 +187,18 @@ export function LearnApp({ childProfile: initialProfile, onSignOut }: { childPro
               {bedtimeActive ? `Sweet dreams, ${childProfile.name}! 🌙` : `Hi ${childProfile.name}! 👋`}
             </p>
           </div>
+          {isAdmin && (
+            <select
+              value={devAgeOverride ?? ""}
+              onChange={(e) => setDevAgeOverride(e.target.value === "" ? null : Number(e.target.value))}
+              className="card-soft rounded-full px-3 py-2 text-xs font-bold bg-lilac/40 border-none cursor-pointer"
+              title="Dev: preview a different age's content without changing the real profile">
+              <option value="">🛠️ Age: {childProfile.age} (real)</option>
+              {[3,4,5,6,7].map(a => (
+                <option key={a} value={a}>🛠️ Preview age {a}</option>
+              ))}
+            </select>
+          )}
         </div>
         <div className="flex items-center gap-2">
           {streak > 0 && (
@@ -280,6 +306,7 @@ export function LearnApp({ childProfile: initialProfile, onSignOut }: { childPro
         {tab==="numtrace" && <NumberTrace />}
         {tab==="sentence" && <Section title="Build a Sentence 📝" subtitle="Tap the words in order!"><SentenceGame difficulty={difficulty} /></Section>}
         {tab==="songs"    && <Section title="Sing Along! 🎶" subtitle="Learn with music!"><SongPlayer /></Section>}
+        {tab==="opposites" && <Section title="Opposites Game ↔️" subtitle="Find the opposite word!"><OppositesGame /></Section>}
         {tab==="trace"    && <TracePanel alphabet={ALPHABET} />}
         {tab==="match"    && <MatchGame alphabet={ALPHABET} />}
         {tab==="quiz"     && <QuizGame alphabet={ALPHABET} />}
