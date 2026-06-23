@@ -32,9 +32,12 @@ import { DaysOfWeek } from "@/components/DaysOfWeek";
 import { CommunityHelpers } from "@/components/CommunityHelpers";
 import { CountTo100 } from "@/components/CountTo100";
 import { TellingTime } from "@/components/TellingTime";
+import { MoneyBasics } from "@/components/MoneyBasics";
+import { PlantsAndSeasons } from "@/components/PlantsAndSeasons";
+import { MapsDirections } from "@/components/MapsDirections";
 import { syncStatsToSupabase } from "@/lib/syncStatsToSupabase";
 
-type TabKey = "abc"|"123"|"colors"|"shapes"|"animals"|"story"|"spell"|"count"|"math"|"rhyme"|"sight"|"phonics"|"memory"|"body"|"emotions"|"weather"|"trace"|"numtrace"|"sentence"|"songs"|"opposites"|"sorting"|"days"|"helpers"|"count100"|"time"|"match"|"quiz"|"color"|"rewards"|"progress"|"worksheets";
+type TabKey = "abc"|"123"|"colors"|"shapes"|"animals"|"story"|"spell"|"count"|"math"|"rhyme"|"sight"|"phonics"|"memory"|"body"|"emotions"|"weather"|"trace"|"numtrace"|"sentence"|"songs"|"opposites"|"sorting"|"days"|"helpers"|"count100"|"time"|"money"|"plants"|"maps"|"match"|"quiz"|"color"|"rewards"|"progress"|"worksheets";
 
 const TABS: { key: TabKey; label: string; emoji: string }[] = [
   { key:"abc",      label:"ABCs",           emoji:"🔤" },
@@ -63,6 +66,9 @@ const TABS: { key: TabKey; label: string; emoji: string }[] = [
   { key:"helpers",  label:"Helpers",        emoji:"🚒" },
   { key:"count100", label:"Count to 100",   emoji:"💯" },
   { key:"time",     label:"Telling Time",   emoji:"🕐" },
+  { key:"money",    label:"Money",          emoji:"🪙" },
+  { key:"plants",   label:"Plants/Seasons", emoji:"🌱" },
+  { key:"maps",     label:"Maps",           emoji:"🧭" },
   { key:"match",    label:"Match",          emoji:"🧩" },
   { key:"quiz",     label:"Quiz",           emoji:"❓" },
   { key:"color",    label:"Color!",         emoji:"🖍️" },
@@ -322,6 +328,9 @@ export function LearnApp({ childProfile: initialProfile, onSignOut, userEmail }:
         {tab==="helpers" && <Section title="Community Helpers 🚒" subtitle="Who helps our community?"><CommunityHelpers /></Section>}
         {tab==="count100" && <Section title="Count to 100 💯" subtitle="Numbers, skip counting, and more!"><CountTo100 /></Section>}
         {tab==="time" && <Section title="Telling Time 🕐" subtitle="Learn to read a clock!"><TellingTime /></Section>}
+        {tab==="money" && <Section title="Money Basics 🪙" subtitle="Learn about coins!"><MoneyBasics /></Section>}
+        {tab==="plants" && <Section title="Plants & Seasons 🌱" subtitle="How things grow and change!"><PlantsAndSeasons /></Section>}
+        {tab==="maps" && <Section title="Maps & Directions 🧭" subtitle="Up, down, left, right!"><MapsDirections /></Section>}
         {tab==="trace"    && <TracePanel alphabet={ALPHABET} />}
         {tab==="match"    && <MatchGame alphabet={ALPHABET} />}
         {tab==="quiz"     && <QuizGame alphabet={ALPHABET} />}
