@@ -83,14 +83,14 @@ export function getTabsForAge(age: number): string[] {
     return ["abc","123","colors","shapes","animals","body","opposites","emotions","trace","color","rewards"];
   }
   if (age === 4) {
-    // Preschool: letter sounds, writing letters, sorting/patterns (TODO),
-    // days of week / weather, simple puzzles (memory), problem solving
-    return ["abc","123","colors","shapes","animals","story","phonics","trace","numtrace","memory","body","opposites","emotions","weather","color","rewards"];
+    // Preschool: letter sounds, writing letters, sorting/patterns,
+    // days of week / weather, community helpers, simple puzzles (memory)
+    return ["abc","123","colors","shapes","animals","story","phonics","trace","numtrace","memory","body","opposites","sorting","days","helpers","emotions","weather","color","rewards"];
   }
   if (age === 5) {
     // Kindergarten: add letters, sight words, simple math, simple games
-    return ["abc","123","colors","shapes","animals","story","spell","count","math","rhyme","phonics","sight","trace","numtrace","sentence","songs","match","body","emotions","weather","memory","color","rewards"];
+    return ["abc","123","colors","shapes","animals","story","spell","count","math","rhyme","phonics","sight","trace","numtrace","sentence","songs","sorting","days","helpers","match","body","emotions","weather","memory","color","rewards"];
   }
   // Grade 1+ (6-7): everything
-  return ["abc","123","colors","shapes","animals","story","spell","count","math","rhyme","phonics","sight","memory","body","emotions","weather","trace","numtrace","sentence","songs","match","quiz","color","rewards"];
+  return ["abc","123","colors","shapes","animals","story","spell","count","math","rhyme","phonics","sight","memory","body","emotions","weather","trace","numtrace","sentence","songs","sorting","days","helpers","match","quiz","color","rewards"];
 }
