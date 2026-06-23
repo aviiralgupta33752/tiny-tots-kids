@@ -27,9 +27,12 @@ import { ProgressDashboard } from "@/components/ProgressDashboard";
 import { SentenceGame } from "@/components/SentenceGame";
 import { SongPlayer } from "@/components/SongPlayer";
 import { OppositesGame } from "@/components/OppositesGame";
+import { SortingPatternsGame } from "@/components/SortingPatternsGame";
+import { DaysOfWeek } from "@/components/DaysOfWeek";
+import { CommunityHelpers } from "@/components/CommunityHelpers";
 import { syncStatsToSupabase } from "@/lib/syncStatsToSupabase";
 
-type TabKey = "abc"|"123"|"colors"|"shapes"|"animals"|"story"|"spell"|"count"|"math"|"rhyme"|"sight"|"phonics"|"memory"|"body"|"emotions"|"weather"|"trace"|"numtrace"|"sentence"|"songs"|"opposites"|"match"|"quiz"|"color"|"rewards"|"progress"|"worksheets";
+type TabKey = "abc"|"123"|"colors"|"shapes"|"animals"|"story"|"spell"|"count"|"math"|"rhyme"|"sight"|"phonics"|"memory"|"body"|"emotions"|"weather"|"trace"|"numtrace"|"sentence"|"songs"|"opposites"|"sorting"|"days"|"helpers"|"match"|"quiz"|"color"|"rewards"|"progress"|"worksheets";
 
 const TABS: { key: TabKey; label: string; emoji: string }[] = [
   { key:"abc",      label:"ABCs",           emoji:"🔤" },
@@ -53,6 +56,9 @@ const TABS: { key: TabKey; label: string; emoji: string }[] = [
   { key:"sentence", label:"Sentences",      emoji:"📝" },
   { key:"songs",    label:"Songs",          emoji:"🎶" },
   { key:"opposites",label:"Opposites",      emoji:"↔️" },
+  { key:"sorting",  label:"Sorting",        emoji:"🗂️" },
+  { key:"days",     label:"Days",           emoji:"📅" },
+  { key:"helpers",  label:"Helpers",        emoji:"🚒" },
   { key:"match",    label:"Match",          emoji:"🧩" },
   { key:"quiz",     label:"Quiz",           emoji:"❓" },
   { key:"color",    label:"Color!",         emoji:"🖍️" },
@@ -307,6 +313,9 @@ export function LearnApp({ childProfile: initialProfile, onSignOut, userEmail }:
         {tab==="sentence" && <Section title="Build a Sentence 📝" subtitle="Tap the words in order!"><SentenceGame difficulty={difficulty} /></Section>}
         {tab==="songs"    && <Section title="Sing Along! 🎶" subtitle="Learn with music!"><SongPlayer /></Section>}
         {tab==="opposites" && <Section title="Opposites Game ↔️" subtitle="Find the opposite word!"><OppositesGame /></Section>}
+        {tab==="sorting" && <Section title="Sorting & Patterns 🗂️" subtitle="Sort items and find patterns!"><SortingPatternsGame /></Section>}
+        {tab==="days" && <Section title="Days of the Week 📅" subtitle="Learn the days!"><DaysOfWeek /></Section>}
+        {tab==="helpers" && <Section title="Community Helpers 🚒" subtitle="Who helps our community?"><CommunityHelpers /></Section>}
         {tab==="trace"    && <TracePanel alphabet={ALPHABET} />}
         {tab==="match"    && <MatchGame alphabet={ALPHABET} />}
         {tab==="quiz"     && <QuizGame alphabet={ALPHABET} />}
