@@ -30,9 +30,11 @@ import { OppositesGame } from "@/components/OppositesGame";
 import { SortingPatternsGame } from "@/components/SortingPatternsGame";
 import { DaysOfWeek } from "@/components/DaysOfWeek";
 import { CommunityHelpers } from "@/components/CommunityHelpers";
+import { CountTo100 } from "@/components/CountTo100";
+import { TellingTime } from "@/components/TellingTime";
 import { syncStatsToSupabase } from "@/lib/syncStatsToSupabase";
 
-type TabKey = "abc"|"123"|"colors"|"shapes"|"animals"|"story"|"spell"|"count"|"math"|"rhyme"|"sight"|"phonics"|"memory"|"body"|"emotions"|"weather"|"trace"|"numtrace"|"sentence"|"songs"|"opposites"|"sorting"|"days"|"helpers"|"match"|"quiz"|"color"|"rewards"|"progress"|"worksheets";
+type TabKey = "abc"|"123"|"colors"|"shapes"|"animals"|"story"|"spell"|"count"|"math"|"rhyme"|"sight"|"phonics"|"memory"|"body"|"emotions"|"weather"|"trace"|"numtrace"|"sentence"|"songs"|"opposites"|"sorting"|"days"|"helpers"|"count100"|"time"|"match"|"quiz"|"color"|"rewards"|"progress"|"worksheets";
 
 const TABS: { key: TabKey; label: string; emoji: string }[] = [
   { key:"abc",      label:"ABCs",           emoji:"🔤" },
@@ -59,6 +61,8 @@ const TABS: { key: TabKey; label: string; emoji: string }[] = [
   { key:"sorting",  label:"Sorting",        emoji:"🗂️" },
   { key:"days",     label:"Days",           emoji:"📅" },
   { key:"helpers",  label:"Helpers",        emoji:"🚒" },
+  { key:"count100", label:"Count to 100",   emoji:"💯" },
+  { key:"time",     label:"Telling Time",   emoji:"🕐" },
   { key:"match",    label:"Match",          emoji:"🧩" },
   { key:"quiz",     label:"Quiz",           emoji:"❓" },
   { key:"color",    label:"Color!",         emoji:"🖍️" },
@@ -316,6 +320,8 @@ export function LearnApp({ childProfile: initialProfile, onSignOut, userEmail }:
         {tab==="sorting" && <Section title="Sorting & Patterns 🗂️" subtitle="Sort items and find patterns!"><SortingPatternsGame /></Section>}
         {tab==="days" && <Section title="Days of the Week 📅" subtitle="Learn the days!"><DaysOfWeek /></Section>}
         {tab==="helpers" && <Section title="Community Helpers 🚒" subtitle="Who helps our community?"><CommunityHelpers /></Section>}
+        {tab==="count100" && <Section title="Count to 100 💯" subtitle="Numbers, skip counting, and more!"><CountTo100 /></Section>}
+        {tab==="time" && <Section title="Telling Time 🕐" subtitle="Learn to read a clock!"><TellingTime /></Section>}
         {tab==="trace"    && <TracePanel alphabet={ALPHABET} />}
         {tab==="match"    && <MatchGame alphabet={ALPHABET} />}
         {tab==="quiz"     && <QuizGame alphabet={ALPHABET} />}
