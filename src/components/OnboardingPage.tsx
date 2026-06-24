@@ -92,5 +92,5 @@ export function getTabsForAge(age: number): string[] {
     return ["abc","123","colors","shapes","animals","story","spell","count","math","rhyme","phonics","sight","trace","numtrace","sentence","songs","sorting","days","helpers","count100","time","money","plants","maps","match","body","emotions","weather","memory","color","rewards"];
   }
   // Grade 1+ (6-7): everything
-  return ["abc","123","colors","shapes","animals","story","spell","count","math","rhyme","phonics","sight","memory","body","emotions","weather","trace","numtrace","sentence","songs","sorting","days","helpers","count100","time","money","plants","maps","placevalue","measure","readcomp","match","quiz","color","rewards"];
+  return ["abc","123","colors","shapes","animals","story","spell","count","math","rhyme","phonics","sight","memory","body","emotions","weather","trace","numtrace","sentence","songs","sorting","days","helpers","count100","time","money","plants","maps","placevalue","measure","readcomp","lifecycles","space","citizenship","match","quiz","color","rewards"];
 }
