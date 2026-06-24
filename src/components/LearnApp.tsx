@@ -35,9 +35,12 @@ import { TellingTime } from "@/components/TellingTime";
 import { MoneyBasics } from "@/components/MoneyBasics";
 import { PlantsAndSeasons } from "@/components/PlantsAndSeasons";
 import { MapsDirections } from "@/components/MapsDirections";
+import { PlaceValue } from "@/components/PlaceValue";
+import { Measurement } from "@/components/Measurement";
+import { ReadingComprehension } from "@/components/ReadingComprehension";
 import { syncStatsToSupabase } from "@/lib/syncStatsToSupabase";
 
-type TabKey = "abc"|"123"|"colors"|"shapes"|"animals"|"story"|"spell"|"count"|"math"|"rhyme"|"sight"|"phonics"|"memory"|"body"|"emotions"|"weather"|"trace"|"numtrace"|"sentence"|"songs"|"opposites"|"sorting"|"days"|"helpers"|"count100"|"time"|"money"|"plants"|"maps"|"match"|"quiz"|"color"|"rewards"|"progress"|"worksheets";
+type TabKey = "abc"|"123"|"colors"|"shapes"|"animals"|"story"|"spell"|"count"|"math"|"rhyme"|"sight"|"phonics"|"memory"|"body"|"emotions"|"weather"|"trace"|"numtrace"|"sentence"|"songs"|"opposites"|"sorting"|"days"|"helpers"|"count100"|"time"|"money"|"plants"|"maps"|"placevalue"|"measure"|"readcomp"|"match"|"quiz"|"color"|"rewards"|"progress"|"worksheets";
 
 const TABS: { key: TabKey; label: string; emoji: string }[] = [
   { key:"abc",      label:"ABCs",           emoji:"🔤" },
@@ -69,6 +72,9 @@ const TABS: { key: TabKey; label: string; emoji: string }[] = [
   { key:"money",    label:"Money",          emoji:"🪙" },
   { key:"plants",   label:"Plants/Seasons", emoji:"🌱" },
   { key:"maps",     label:"Maps",           emoji:"🧭" },
+  { key:"placevalue", label:"Place Value",  emoji:"🧱" },
+  { key:"measure",  label:"Measurement",    emoji:"📏" },
+  { key:"readcomp", label:"Reading Comp.",  emoji:"📖" },
   { key:"match",    label:"Match",          emoji:"🧩" },
   { key:"quiz",     label:"Quiz",           emoji:"❓" },
   { key:"color",    label:"Color!",         emoji:"🖍️" },
@@ -331,6 +337,9 @@ export function LearnApp({ childProfile: initialProfile, onSignOut, userEmail }:
         {tab==="money" && <Section title="Money Basics 🪙" subtitle="Learn about coins!"><MoneyBasics /></Section>}
         {tab==="plants" && <Section title="Plants & Seasons 🌱" subtitle="How things grow and change!"><PlantsAndSeasons /></Section>}
         {tab==="maps" && <Section title="Maps & Directions 🧭" subtitle="Up, down, left, right!"><MapsDirections /></Section>}
+        {tab==="placevalue" && <Section title="Place Value 🧱" subtitle="Tens and ones!"><PlaceValue /></Section>}
+        {tab==="measure" && <Section title="Measurement 📏" subtitle="How long is it?"><Measurement /></Section>}
+        {tab==="readcomp" && <Section title="Reading Comprehension 📖" subtitle="Read and answer questions!"><ReadingComprehension /></Section>}
         {tab==="trace"    && <TracePanel alphabet={ALPHABET} />}
         {tab==="match"    && <MatchGame alphabet={ALPHABET} />}
         {tab==="quiz"     && <QuizGame alphabet={ALPHABET} />}
