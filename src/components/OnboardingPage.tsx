@@ -99,5 +99,5 @@ export function getTabsForAge(age: number): string[] {
   }
   // Advanced 1st Grade (age 7): everything plus multiplication, fractions,
   // making change, states/countries, ecosystems, matter, coding (added incrementally)
-  return ["abc","123","colors","shapes","animals","story","spell","count","math","rhyme","phonics","sight","memory","body","emotions","weather","trace","numtrace","sentence","songs","sorting","days","helpers","count100","time","money","plants","maps","placevalue","measure","readcomp","lifecycles","space","citizenship","multiply","fractions","change","match","quiz","color","rewards"];
+  return ["abc","123","colors","shapes","animals","story","spell","count","math","rhyme","phonics","sight","memory","body","emotions","weather","trace","numtrace","sentence","songs","sorting","days","helpers","count100","time","money","plants","maps","placevalue","measure","readcomp","lifecycles","space","citizenship","multiply","fractions","change","geo","ecosystems","matter","match","quiz","color","rewards"];
 }
