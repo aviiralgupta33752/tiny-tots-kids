@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-
-const ADMIN_EMAIL = "avigupta2772@gmail.com";
+import { listAdminUsers, checkIsAdmin } from "@/lib/admin.functions";
 
 interface UserData {
   id: string;
@@ -11,7 +10,7 @@ interface UserData {
   child_age?: number;
   stars?: number;
   streak?: number;
-  last_active?: string;
+  last_active?: string | null;
 }
 
 export function AdminPage({ onBack }: { onBack: () => void }) {
@@ -27,40 +26,43 @@ export function AdminPage({ onBack }: { onBack: () => void }) {
   });
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      const email = session?.user?.email ?? "";
-      setCurrentEmail(email);
-      if (email === ADMIN_EMAIL) {
-        setAuthorized(true);
-        loadUsers();
-      } else {
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setCurrentEmail(session?.user?.email ?? "");
+      if (!session) {
+        setLoading(false);
+        return;
+      }
+      try {
+        const { isAdmin } = await checkIsAdmin();
+        if (isAdmin) {
+          setAuthorized(true);
+          await loadUsers();
+        } else {
+          setLoading(false);
+        }
+      } catch {
         setLoading(false);
       }
-    });
+    })();
   }, []);
 
   async function loadUsers() {
     setLoading(true);
     try {
-      // Get all auth users via admin API
-      const { data: { users: authUsers }, error } = await supabase.auth.admin.listUsers();
-      if (error) throw error;
-
-      // Build user data — merge with any profile data stored in localStorage
-      // (In a real app you'd have a profiles table in Supabase)
-      const userData: UserData[] = authUsers.map(u => ({
+      const { users: authUsers } = await listAdminUsers();
+      const userData: UserData[] = authUsers.map((u) => ({
         id: u.id,
-        email: u.email ?? "",
+        email: u.email,
         created_at: u.created_at,
-        last_active: u.last_sign_in_at,
+        last_active: u.last_active,
       }));
 
       setUsers(userData);
 
-      // Compute stats
       const today = new Date().toDateString();
-      const activeToday = userData.filter(u =>
-        u.last_active && new Date(u.last_active).toDateString() === today
+      const activeToday = userData.filter(
+        (u) => u.last_active && new Date(u.last_active).toDateString() === today,
       ).length;
 
       setStats({
@@ -75,6 +77,7 @@ export function AdminPage({ onBack }: { onBack: () => void }) {
       setLoading(false);
     }
   }
+
 
   if (!authorized && !loading) {
     return (
