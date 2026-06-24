@@ -41,9 +41,12 @@ import { ReadingComprehension } from "@/components/ReadingComprehension";
 import { LifeCycles } from "@/components/LifeCycles";
 import { EarthMoonSun } from "@/components/EarthMoonSun";
 import { GoodCitizenship } from "@/components/GoodCitizenship";
+import { MultiplicationIntro } from "@/components/MultiplicationIntro";
+import { FractionsGame } from "@/components/FractionsGame";
+import { MakingChange } from "@/components/MakingChange";
 import { syncStatsToSupabase } from "@/lib/syncStatsToSupabase";
 
-type TabKey = "abc"|"123"|"colors"|"shapes"|"animals"|"story"|"spell"|"count"|"math"|"rhyme"|"sight"|"phonics"|"memory"|"body"|"emotions"|"weather"|"trace"|"numtrace"|"sentence"|"songs"|"opposites"|"sorting"|"days"|"helpers"|"count100"|"time"|"money"|"plants"|"maps"|"placevalue"|"measure"|"readcomp"|"lifecycles"|"space"|"citizenship"|"match"|"quiz"|"color"|"rewards"|"progress"|"worksheets";
+type TabKey = "abc"|"123"|"colors"|"shapes"|"animals"|"story"|"spell"|"count"|"math"|"rhyme"|"sight"|"phonics"|"memory"|"body"|"emotions"|"weather"|"trace"|"numtrace"|"sentence"|"songs"|"opposites"|"sorting"|"days"|"helpers"|"count100"|"time"|"money"|"plants"|"maps"|"placevalue"|"measure"|"readcomp"|"lifecycles"|"space"|"citizenship"|"multiply"|"fractions"|"change"|"match"|"quiz"|"color"|"rewards"|"progress"|"worksheets";
 
 const TABS: { key: TabKey; label: string; emoji: string }[] = [
   { key:"abc",      label:"ABCs",           emoji:"🔤" },
@@ -81,6 +84,9 @@ const TABS: { key: TabKey; label: string; emoji: string }[] = [
   { key:"lifecycles", label:"Life Cycles",  emoji:"🦋" },
   { key:"space",    label:"Earth & Space",  emoji:"🌍" },
   { key:"citizenship", label:"Citizenship", emoji:"🤝" },
+  { key:"multiply", label:"Multiplication", emoji:"✖️" },
+  { key:"fractions", label:"Fractions",     emoji:"🍕" },
+  { key:"change",   label:"Making Change",  emoji:"💵" },
   { key:"match",    label:"Match",          emoji:"🧩" },
   { key:"quiz",     label:"Quiz",           emoji:"❓" },
   { key:"color",    label:"Color!",         emoji:"🖍️" },
@@ -349,6 +355,9 @@ export function LearnApp({ childProfile: initialProfile, onSignOut, userEmail }:
         {tab==="lifecycles" && <Section title="Life Cycles 🦋" subtitle="How animals grow and change!"><LifeCycles /></Section>}
         {tab==="space" && <Section title="Earth, Moon, and Sun 🌍" subtitle="Our place in space!"><EarthMoonSun /></Section>}
         {tab==="citizenship" && <Section title="Good Citizenship 🤝" subtitle="Making good choices!"><GoodCitizenship /></Section>}
+        {tab==="multiply" && <Section title="Multiplication ✖️" subtitle="Adding equal groups!"><MultiplicationIntro /></Section>}
+        {tab==="fractions" && <Section title="Fractions 🍕" subtitle="Parts of a whole!"><FractionsGame /></Section>}
+        {tab==="change" && <Section title="Making Change 💵" subtitle="How much change do you get?"><MakingChange /></Section>}
         {tab==="trace"    && <TracePanel alphabet={ALPHABET} />}
         {tab==="match"    && <MatchGame alphabet={ALPHABET} />}
         {tab==="quiz"     && <QuizGame alphabet={ALPHABET} />}
