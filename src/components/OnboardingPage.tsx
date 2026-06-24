@@ -91,6 +91,13 @@ export function getTabsForAge(age: number): string[] {
     // Kindergarten: add letters, sight words, simple math, simple games
     return ["abc","123","colors","shapes","animals","story","spell","count","math","rhyme","phonics","sight","trace","numtrace","sentence","songs","sorting","days","helpers","count100","time","money","plants","maps","match","body","emotions","weather","memory","color","rewards"];
   }
-  // Grade 1+ (6-7): everything
-  return ["abc","123","colors","shapes","animals","story","spell","count","math","rhyme","phonics","sight","memory","body","emotions","weather","trace","numtrace","sentence","songs","sorting","days","helpers","count100","time","money","plants","maps","placevalue","measure","readcomp","lifecycles","space","citizenship","match","quiz","color","rewards"];
+  if (age === 6) {
+    // 1st Grade: reading short books/comprehension, complete sentences,
+    // addition/subtraction within 20, place value, measurement, life cycles,
+    // Earth/Moon/Sun, good citizenship
+    return ["abc","123","colors","shapes","animals","story","spell","count","math","rhyme","phonics","sight","memory","body","emotions","weather","trace","numtrace","sentence","songs","sorting","days","helpers","count100","time","money","plants","maps","placevalue","measure","readcomp","lifecycles","space","citizenship","match","quiz","color","rewards"];
+  }
+  // Advanced 1st Grade (age 7): everything plus multiplication, fractions,
+  // making change, states/countries, ecosystems, matter, coding (added incrementally)
+  return ["abc","123","colors","shapes","animals","story","spell","count","math","rhyme","phonics","sight","memory","body","emotions","weather","trace","numtrace","sentence","songs","sorting","days","helpers","count100","time","money","plants","maps","placevalue","measure","readcomp","lifecycles","space","citizenship","multiply","fractions","change","match","quiz","color","rewards"];
 }
