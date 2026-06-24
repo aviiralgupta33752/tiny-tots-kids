@@ -47,9 +47,11 @@ import { MakingChange } from "@/components/MakingChange";
 import { StatesCountries } from "@/components/StatesCountries";
 import { Ecosystems } from "@/components/Ecosystems";
 import { MatterStates } from "@/components/MatterStates";
+import { ParagraphWriting } from "@/components/ParagraphWriting";
+import { CodingLogic } from "@/components/CodingLogic";
 import { syncStatsToSupabase } from "@/lib/syncStatsToSupabase";
 
-type TabKey = "abc"|"123"|"colors"|"shapes"|"animals"|"story"|"spell"|"count"|"math"|"rhyme"|"sight"|"phonics"|"memory"|"body"|"emotions"|"weather"|"trace"|"numtrace"|"sentence"|"songs"|"opposites"|"sorting"|"days"|"helpers"|"count100"|"time"|"money"|"plants"|"maps"|"placevalue"|"measure"|"readcomp"|"lifecycles"|"space"|"citizenship"|"multiply"|"fractions"|"change"|"geo"|"ecosystems"|"matter"|"match"|"quiz"|"color"|"rewards"|"progress"|"worksheets";
+type TabKey = "abc"|"123"|"colors"|"shapes"|"animals"|"story"|"spell"|"count"|"math"|"rhyme"|"sight"|"phonics"|"memory"|"body"|"emotions"|"weather"|"trace"|"numtrace"|"sentence"|"songs"|"opposites"|"sorting"|"days"|"helpers"|"count100"|"time"|"money"|"plants"|"maps"|"placevalue"|"measure"|"readcomp"|"lifecycles"|"space"|"citizenship"|"multiply"|"fractions"|"change"|"geo"|"ecosystems"|"matter"|"paragraph"|"coding"|"match"|"quiz"|"color"|"rewards"|"progress"|"worksheets";
 
 const TABS: { key: TabKey; label: string; emoji: string }[] = [
   { key:"abc",      label:"ABCs",           emoji:"🔤" },
@@ -93,6 +95,8 @@ const TABS: { key: TabKey; label: string; emoji: string }[] = [
   { key:"geo",      label:"States/Countries", emoji:"🗽" },
   { key:"ecosystems", label:"Ecosystems",   emoji:"🌳" },
   { key:"matter",   label:"States of Matter", emoji:"🧊" },
+  { key:"paragraph",label:"Paragraph Writing", emoji:"📝" },
+  { key:"coding",   label:"Coding & Logic", emoji:"🤖" },
   { key:"match",    label:"Match",          emoji:"🧩" },
   { key:"quiz",     label:"Quiz",           emoji:"❓" },
   { key:"color",    label:"Color!",         emoji:"🖍️" },
@@ -367,6 +371,8 @@ export function LearnApp({ childProfile: initialProfile, onSignOut, userEmail }:
         {tab==="geo" && <Section title="States & Countries 🗽" subtitle="Explore the world!"><StatesCountries /></Section>}
         {tab==="ecosystems" && <Section title="Ecosystems 🌳" subtitle="Where animals live!"><Ecosystems /></Section>}
         {tab==="matter" && <Section title="States of Matter 🧊" subtitle="Solid, liquid, and gas!"><MatterStates /></Section>}
+        {tab==="paragraph" && <Section title="Paragraph Writing 📝" subtitle="Build a 3-sentence paragraph!"><ParagraphWriting /></Section>}
+        {tab==="coding" && <Section title="Coding & Logic 🤖" subtitle="Step-by-step thinking!"><CodingLogic /></Section>}
         {tab==="trace"    && <TracePanel alphabet={ALPHABET} />}
         {tab==="match"    && <MatchGame alphabet={ALPHABET} />}
         {tab==="quiz"     && <QuizGame alphabet={ALPHABET} />}
