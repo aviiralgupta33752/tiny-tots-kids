@@ -97,7 +97,6 @@ export function getTabsForAge(age: number): string[] {
     // Earth/Moon/Sun, good citizenship
     return ["abc","123","colors","shapes","animals","story","spell","count","math","rhyme","phonics","sight","memory","body","emotions","weather","trace","numtrace","sentence","songs","sorting","days","helpers","count100","time","money","plants","maps","placevalue","measure","readcomp","lifecycles","space","citizenship","match","quiz","color","rewards"];
   }
-  // Advanced 1st Grade (age 7): everything plus multiplication, fractions,
-  // making change, states/countries, ecosystems, matter, coding (added incrementally)
-  return ["abc","123","colors","shapes","animals","story","spell","count","math","rhyme","phonics","sight","memory","body","emotions","weather","trace","numtrace","sentence","songs","sorting","days","helpers","count100","time","money","plants","maps","placevalue","measure","readcomp","lifecycles","space","citizenship","multiply","fractions","change","geo","ecosystems","matter","match","quiz","color","rewards"];
+  // Advanced 1st Grade (age 7): the complete curriculum
+  return ["abc","123","colors","shapes","animals","story","spell","count","math","rhyme","phonics","sight","memory","body","emotions","weather","trace","numtrace","sentence","songs","sorting","days","helpers","count100","time","money","plants","maps","placevalue","measure","readcomp","lifecycles","space","citizenship","multiply","fractions","change","geo","ecosystems","matter","paragraph","coding","match","quiz","color","rewards"];
 }
