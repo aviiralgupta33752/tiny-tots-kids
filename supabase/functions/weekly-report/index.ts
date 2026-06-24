@@ -13,10 +13,23 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
+const CRON_SECRET = Deno.env.get("CRON_SECRET");
+
 Deno.serve(async (req) => {
   try {
-    if (!RESEND_API_KEY || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    if (!RESEND_API_KEY || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !CRON_SECRET) {
       return new Response(JSON.stringify({ error: "Missing required environment secrets" }), { status: 500 });
+    }
+
+    const authHeader = req.headers.get("Authorization") || "";
+    const provided = authHeader.replace(/^Bearer\s+/i, "").trim();
+    // Constant-time-ish comparison
+    const expected = CRON_SECRET;
+    if (provided.length !== expected.length || provided !== expected) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
